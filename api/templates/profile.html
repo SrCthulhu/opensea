@@ -44,8 +44,11 @@
             background-color: rgb(4 17 29);
         }
     </style>
-
+    {% if userId == user['_id'] %}
     <title>Tu Perfil | OpenSea</title>
+    {% else %}
+    <title>{{user['user']}} | OpenSea</title>
+    {% endif %}
 </head>
 
 <body>
@@ -54,7 +57,7 @@
         <div class="container-fluid">
             <div class="row">
                 <div class="col-12">
-                    <div class="alert alert-success" role="alert">
+                    <div class="alert alert-primary" role="alert">
                         {{mensaje1}}
                     </div>
                 </div>
@@ -143,6 +146,8 @@
                 <div class="col-6 pt-3">
                     <form class="col d-flex" action="/upload/image">
                         <h2>{{user['user']}}</h2>
+
+                        {% if userId == user['_id'] %}
                         <div class="col-6 d-flex px-5">
                             <a id="upload_widget" href="#" class="btn btn-outline-light btn-sm">
                                 <h6 class="pt-2">Cambiar imagen</h6>
@@ -153,14 +158,16 @@
                             </button>
                             <input type="hidden" name="image" id="image" />
                         </div>
+                        {% endif %}
+
                     </form>
                     <h6 class="py-3 azul">Wallet: {{userWallet['_id']}} >>> Balance: {{userWallet['balance']}}</h6>
                     <h6>Se ha unido: {{user['user_created_at']}}</h6>
                     <hr>
                     <small>Artículos {{user['nfts']}} • Último NFT creado {{ ['creation_date']}} • Comisión del
                         creador
-                        0%
-                        • Cadena {{userWallet['name']}} • Categoría Varios </small>
+                        10%
+                        • Cadena {{userWallet['name']}}</small>
                     <br>
                     <br>
                     <p>Descripción del perfil</p>
@@ -186,6 +193,7 @@
                         </div>
                         <div class="modal-body">
                             <h6 class="pb-3">{{total}} item(s)</h6>
+                            <hr>
                             {% if not cartproducts %}
                             <hr>
                             <div class="col text-center">
@@ -194,7 +202,7 @@
                             <hr>
                             {% endif %}
                             {% for p in cartproducts %}
-                            <hr>
+
                             <div class="col display-block d-flex">
                                 <div class="col-3">
                                     <img src="{{p['image_url']}}" width="90rem" style="border-radius: 1rem;">
@@ -317,9 +325,11 @@
                             <img src="{{n['image_url']}}" class="card-img-top" style="border-radius: 0.5rem;">
                             <div class="card-body">
                                 <h6 class="card-title blanco">{{n['name']}} # {{n['quantity']}}</h6>
-                                <p class="card-text blanco">{{n['description']}}.</p>
+                                <p class="card-text blanco">{{n['description']}}</p>
                                 <p class="blanco">{{n['nft_value']}} {{n['currency']}}</p>
                         </a>
+                        <!--Hay que usar ( example['x'] |string) para poder comparar el userId porque sino no entiende que son iguales los id-->
+                        {% if (userId | string) != (user['_id'] | string) %}
                         {% if n['listed'] %}
                         <div class="col d-flex">
                             <div class="col-6 px-2">
@@ -327,13 +337,14 @@
                                     carrito</a>
                             </div>
                             <div class="col-6 px-2">
-                                <a href="#" class="btn btn-primary btn-sm">Comprar ahora</a>
+                                <a href="/checkout/{{n['_id']}}" class="btn btn-primary btn-sm">Comprar ahora</a>
                             </div>
                         </div>
                         {% else %}
                         <div class="col text-center">
                             <h5 class="azul">Item aún sin listar</h5>
                         </div>
+                        {% endif %}
                         {% endif %}
                     </div>
                 </div>

@@ -9,9 +9,11 @@
         integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
     <link rel="icon"
         href="https://upload.wikimedia.org/wikipedia/commons/thumb/2/26/OpenSea_icon.svg/2048px-OpenSea_icon.svg.png">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700&display=swap" rel="stylesheet">
+
     <script src="https://kit.fontawesome.com/68d8235f51.js" crossorigin="anonymous"></script>
     <style type="text/css">
         body {
@@ -30,17 +32,20 @@
             background-color: rgb(38 43 47);
         }
 
-        .dark-blue {
-            background-color: rgb(4 17 29);
+        .cuadrados {
+            outline: 1px solid #d0d0d0;
         }
 
         .azul {
             color: rgb(32, 129, 226);
         }
+
+        .dark-blue {
+            background-color: rgb(4 17 29);
+        }
     </style>
 
-    <title>OpenSea | Home NFT'S Market </title>
-
+    <title>Ofertar | OpenSea</title>
 </head>
 
 <body>
@@ -81,128 +86,88 @@
                             <i class="fa-regular fa-user fa-2x blanco"></i>
                         </a>
                         <i class="fa-solid fa-wallet fa-2x"></i>
-                        <a href="/login" class="text-decoration-none">
-                            <i class="fa-solid fa-cart-shopping fa-2x blanco"></i>
-                        </a>
+                        <i class="fa-solid fa-cart-shopping fa-2x"></i>
+                        <form action="/logout">
+                            <button class="btn fa-solid fa-power-off fa-2x blanco" type="submit" name="logout"></button>
+                        </form>
                     </nav>
                 </div>
             </div>
-            <div class="row py-5">
-                <div class="col text-center">
-                    <h1>Explorar, coleccionar y vender NFT</h1>
-                </div>
-                <!--  <div id="carouselExampleCaptions" class="carousel slide" data-bs-ride="false">
-                    <div class="carousel-indicators">
-                        <button type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide-to="0"
-                            class="active" aria-current="true" aria-label="Slide 1"></button>
-                        <button type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide-to="1"
-                            aria-label="Slide 2"></button>
-                        <button type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide-to="2"
-                            aria-label="Slide 3"></button>
-                    </div>
-                    <div class="carousel-inner">
-                        <div class="carousel-item active">
-                            <img src="https://i.seadn.io/gae/u3dsZAMHTKmv_kufJ2myOspmEY16YPrPybPJ4gw_6fyz2RWzzkpFhaMQjVLhsp51VUuDF5WHHZ-8SM7uYeVVP05RBPxl15UcQl8Lf3c?auto=format&w=1920"
-                                class="d-block w-100">
-                            <div class="carousel-caption d-md-block">
-                                <h5>First slide label</h5>
-                                <p>Some representative placeholder content for the first slide.</p>
-                            </div>
-                        </div>
-                        <div class="carousel-item active">
-                            <img src="" class="d-block w-100">
-                            <div class="carousel-caption d-md-block">
-                                <h5>Second slide label</h5>
-                                <p>Some representative placeholder content for the second slide.</p>
-                            </div>
-                        </div>
-                        <div class="carousel-item active">
-                            <img src="" class="d-block w-100">
-                            <div class="carousel-caption d-md-block">
-                                <h5>Third slide label</h5>
-                                <p>Some representative placeholder content for the third slide.</p>
-                            </div>
+            {% if mensaje1 %}
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-12">
+                        <div class="alert alert-warning" role="alert">
+                            {{mensaje1}}
                         </div>
                     </div>
-                    <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleCaptions"
-                        data-bs-slide="prev">
-                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                        <span class="visually-hidden">Previous</span>
-                    </button>
-                    <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleCaptions"
-                        data-bs-slide="next">
-                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                        <span class="visually-hidden">Next</span>
-                    </button>
-                </div> -->
-                <!-- Modal -->
+                </div>
             </div>
+            {% endif %}
+            {% if mensaje2 %}
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-12">
+                        <div class="alert alert-danger" role="alert">
+                            {{mensaje2}}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            {% if mensaje4 %}
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-12">
+                        <div class="alert alert-danger" role="alert">
+                            {{mensaje4}}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            {% if mensaje5 %}
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-12">
+                        <div class="alert alert-danger" role="alert">
+                            {{mensaje5}}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
             <div class="row">
-                <div class="col-2">
-                    <a href="#" class="text-decoration-none">
-                        <h3 class="blanco">En tendencia</h3>
-                    </a>
+                <div class="col-4 py-5 d-flex px-4">
+                    <div class="col-1">
+                        <a href="/nft/details/{{nft['_id']}}" class="text-decoration-none">
+                            <i class="fa-solid fa-caret-left fa-4x azul"></i>
+                        </a>
+                    </div>
+                    <div class="col-3 pt-4">
+                        <h6>Volver al NFT</h6>
+                    </div>
                 </div>
-                <div class="col-2">
-                    <a href="#" class="text-decoration-none">
-                        <h3 class="text-secondary">Principales</h3>
-                    </a>
+                <div class="col-4 text-center py-5">
+                    <h2 class="pb-3 azul">Realiza tu oferta</h2>
+                    <p>El monto que elijas será publico en la subasta</p>
+                    <p class="azul">Tu balance actual es: {{userWallet['balance']}} $MFC</p>
+                    <form action="/create/offer/{{nft['_id']}}">
+                        <ul class="list-group list-group-flush negro" style="border-radius: 0.5rem;">
+                            <li class="list-group-item list-group-item-action negro blanco">
+                                <h6>Ingresa la cantidad</h6>
+                                <input class="form-control negro" placeholder="0 $MFC" name="price">
+                                <div class="div py-3">
+                                    <button type="submit" class="btn btn-primary">Ofertar</button>
+                                </div>
+                            </li>
+                        </ul>
+                    </form>
+                    <div class="col pt-3">
+                        <h3>Monto base del item subastado: {{nft['listed']['auction_amount']}} $MFC</h3>
+                    </div>
                 </div>
-                <hr>
-            </div>
-            <div class="row">
-                <div class="col-1">
-                    <small class="azul">PERFILES</small>
-                </div>
-                <div class="col-2">
-
-                </div>
-                <div class="col-1 text-end">
-                    <small class="azul">PRECIO MÍNIMO</small>
-                </div>
-                <div class="col-1 text-end">
-                    <small class="azul">VOLUMEN</small>
-                </div>
-            </div>
-            <div class="row py-2">
-                {% for x in users %}
-                <div class="col-1 pt-5 text-center">
-                    <h6>{{x['user_number']}}</h6>
-                </div>
-                {% if profileImage == None %}
-                <div class="col-1 my-3">
-                    <a href="/profile/{{x['_id']}}">
-                        <img src="https://fl-1.cdn.flockler.com/embed/no-image.svg" style="border-radius: 10px;"
-                            height="75rem" width="80rem">
-                    </a>
-                </div>
-                {% else %}
-                <div class="col-1 my-3">
-                    <a href="/profile/{{x['_id']}}">
-                        <img src="{{['image_url']}}" style="border-radius: 10px;" height="75rem" width="80rem">
-                    </a>
-                </div>
-                {% endif %}
-                <div class="col-1 pt-5">
-                    <a href="/profile/{{x['_id']}}" class="text-decoration-none">
-                        <h6 class="azul">{{x['user']}}</h6>
-                    </a>
-                </div>
-                <div class="col-1 pt-5 text-end">
-                    <h6>0 $MFC</h6>
-                </div>
-                <div class="col-1 pt-5 text-end">
-                    <h6>0 $MFC</h6>
-                </div>
-                <div class="col-1"></div>
-                {% endfor %}
-                <hr>
-            </div>
-
-            <div class="row">
-                <div class="col">
-                    <h3>Buscar por categoría</h3>
-                </div>
+                <div class="col-4"></div>
             </div>
         </div>
     </section>
@@ -290,9 +255,6 @@
             </div>
         </div>
     </section>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4"
-        crossorigin="anonymous"></script>
 </body>
 
 </html>

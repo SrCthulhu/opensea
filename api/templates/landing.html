@@ -65,7 +65,7 @@
                             <input class="form-control me-2 negro blanco" type="search"
                                 placeholder="Buscar artículos, colecciones y cuentas" aria-label="Search">
                         </div>
-                        <a class="navbar-brand pt-2" href="#">
+                        <a class="navbar-brand pt-2" href="/landing">
                             <h6 class="blanco">Explorar</h6>
                         </a>
                         <a class="navbar-brand pt-2" href="#">
@@ -167,11 +167,9 @@
             <div class="row py-2">
                 {% for x in users %}
                 <div class="col-1 pt-5 text-center">
-                    {% for i in range(total) %}
-                    <h6>{{i + 1}}</h6>
-                    {% endfor %}
+                    <h6>{{x['user_number']}}</h6>
                 </div>
-                {% if userProfilesImages == None %}
+                {% if profileImage == None %}
                 <div class="col-1 my-3">
                     <a href="/profile/{{x['_id']}}">
                         <img src="https://fl-1.cdn.flockler.com/embed/no-image.svg" style="border-radius: 10px;"
@@ -181,19 +179,20 @@
                 {% else %}
                 <div class="col-1 my-3">
                     <a href="/profile/{{x['_id']}}">
-                        <img src="{{userProfilesImages['image_url']}}" style="border-radius: 10px;" height="75rem"
-                            width="80rem">
+                        <img src="{{['image_url']}}" style="border-radius: 10px;" height="75rem" width="80rem">
                     </a>
                 </div>
                 {% endif %}
                 <div class="col-1 pt-5">
-                    <h6>{{x['user']}}</h6>
+                    <a href="/profile/{{x['_id']}}" class="text-decoration-none">
+                        <h6 class="azul">{{x['user']}}</h6>
+                    </a>
                 </div>
                 <div class="col-1 pt-5 text-end">
-                    <h6>0 currency</h6>
+                    <h6>0 $MFC</h6>
                 </div>
                 <div class="col-1 pt-5 text-end">
-                    <h6>0 currency</h6>
+                    <h6>0 $MFC</h6>
                 </div>
                 <div class="col-1"></div>
                 {% endfor %}

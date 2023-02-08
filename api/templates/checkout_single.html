@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+    <link rel="icon"
+        href="https://upload.wikimedia.org/wikipedia/commons/thumb/2/26/OpenSea_icon.svg/2048px-OpenSea_icon.svg.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700&display=swap" rel="stylesheet">
+
+    <script src="https://kit.fontawesome.com/68d8235f51.js" crossorigin="anonymous"></script>
+    <style type="text/css">
+        body {
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .blanco {
+            color: white;
+        }
+
+        .negro {
+            background-color: #202225;
+        }
+
+        .gris {
+            background-color: rgb(38 43 47);
+        }
+
+        .cuadrados {
+            outline: 1px solid #d0d0d0;
+        }
+
+        .azul {
+            color: rgb(32, 129, 226);
+        }
+
+        .dark-blue {
+            background-color: rgb(4 17 29);
+        }
+    </style>
+
+    <title>Checkout | OpenSea</title>
+</head>
+
+<body>
+    <section class="negro blanco pb-5">
+        {% if mensaje1 %}
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="alert alert-light" role="alert">
+                        {{mensaje1}}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        {% if mensaje2 %}
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="alert alert-danger" role="alert">
+                        {{mensaje2}}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        {% if mensaje3 %}
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="alert alert-danger" role="alert">
+                        {{mensaje3}}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        <div class="container-fluid">
+            <div class="row py-2">
+                <div class="col-12">
+                    <nav class="navbar">
+                        <div class="col-1 d-flex">
+                            <a href="/">
+                                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/26/OpenSea_icon.svg/2048px-OpenSea_icon.svg.png"
+                                    height="40px" width="40px">
+                            </a>
+                            <div class="col-1 pt-2 px-2">
+                                <a href="/" class="text-decoration-none">
+                                    <h5 class="blanco">OpenSea</h5>
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-1"></div>
+                        <div class="col-4">
+                            <input class="form-control me-2 negro blanco" type="search"
+                                placeholder="Buscar artículos, colecciones y cuentas" aria-label="Search">
+                        </div>
+                        <a class="navbar-brand pt-2" href="#">
+                            <h6 class="blanco">Explorar</h6>
+                        </a>
+                        <a class="navbar-brand pt-2" href="#">
+                            <h6 class="blanco">Drops</h6>
+                        </a>
+                        <a class="navbar-brand pt-2" href="#">
+                            <h6 class="blanco">Estadísticas</h6>
+                        </a>
+                        <a class="navbar-brand pt-2" href="#">
+                            <h6 class="blanco">Recursos</h6>
+                        </a>
+                        <a href="/profile/{{userId}}" class="text-decoration-none">
+                            <i class="fa-regular fa-user fa-2x blanco"></i>
+                        </a>
+                        <i class="fa-solid fa-wallet fa-2x"></i>
+                        <a href="#" class="text-decoration-none">
+                            <i class="fa-solid fa-cart-shopping fa-2x blanco" data-bs-toggle="modal"
+                                data-bs-target="#myModal"></i>
+                        </a>
+                        <form action="/logout">
+                            <button class="btn fa-solid fa-power-off fa-2x blanco" type="submit" name="logout"></button>
+                        </form>
+                    </nav>
+                </div>
+            </div>
+            <form class="container" action="/order/create/single/product/{{product['_id']}}">
+                <input name="total" value="{{total}}" type="hidden" />
+                <div class="row">
+                    <div class="col-6 py-5">
+                        <label for="exampleFormControlInput1" class="form-label">
+                            <h6>Cédula | DNI | Pasaporte*</h6>
+                        </label>
+                        <input type="documento" class="form-control" id="exampleFormControlInput1"
+                            placeholder="N° de Documento" name="document">
+                        <div class="row py-3">
+                            <div class="col-6">
+                                <label for="exampleFormControlInput1" class="form-label">
+                                    <h6>Nombre*</h6>
+                                </label>
+                                <input type="#" class="form-control" id="exampleFormControlInput1"
+                                    placeholder="Example: Ezio" name="first_name">
+                            </div>
+                            <div class="col-6">
+                                <label for="exampleFormControlInput1" class="form-label">
+                                    <h6>Apellido*</h6>
+                                </label>
+                                <input type="#" class="form-control" id="exampleFormControlInput1"
+                                    placeholder="Example: Auditore" name="last_name">
+                            </div>
+                        </div>
+                        <div class="py-1">
+                            <label for="exampleFormControlInput1" class="form-label">
+                                <h6>Dirección*</h6>
+                            </label>
+                            <input type="documento" class="form-control" id="exampleFormControlInput1"
+                                placeholder="Calle - Altura" name="address">
+                        </div>
+                        <div class="py-1">
+                            <label for="exampleFormControlInput1" class="form-label">
+                                <h6>Estado*</h6>
+                            </label>
+                            <input type="documento" class="form-control" id="exampleFormControlInput1"
+                                placeholder="Example: Buenos Aires" name="state">
+                        </div>
+                        <div class="py-1">
+                            <label for="exampleFormControlInput1" class="form-label">
+                                <h6>País*</h6>
+                            </label>
+                            <input type="documento" class="form-control" id="exampleFormControlInput1"
+                                placeholder="Example: Argentina " name="country">
+                            <div class="py-1">
+                                <label for="exampleFormControlInput1" class="form-label">
+                                    <h6>Móvil*</h6>
+                                </label>
+                                <input type="documento" class="form-control" id="exampleFormControlInput1"
+                                    placeholder="Example: +54 9 11 0000-0000" name="phone">
+                            </div>
+                        </div>
+                        <div class="py-1">
+                            <label for="exampleFormControlInput1" class="form-label">
+                                <h6>Email*</h6>
+                            </label>
+                            <input type="documento" class="form-control" id="exampleFormControlInput1"
+                                placeholder="example@gmail.com" name="email">
+                        </div>
+                    </div>
+
+                    <div class="col-6 py-5 cuadrados" style="border-radius: 0.5rem;">
+
+                        <div class="row">
+                            <div class="col-2">
+                                <img src="{{product['image_url']}}" style="border-radius: 0.5rem;" width="90rem">
+                            </div>
+                            <div class="col-10">
+                                <h3 class="azul pb-2">{{product['name']}} X {{product['quantity']}}</h3>
+                                <p class="text-secondary">{{product['description']}}</p>
+                                <hr>
+                                <h6>{{product['listed']['fixed_amount']}} ${{product['nft_currency']}}</h6>
+                                <h6>Categoría: {{product['listed']['category']}}</h6>
+                                <h6 class="azul">Propietario actual: {{product['owner']}}</h6>
+                                <h6 class="text-secondary">Creado por: {{product['creator']['user']}}</h6>
+                                <h6>Tiempo Restante: {{product['listed']['created_at']}} Hrs</h6>
+                            </div>
+                            <hr>
+                        </div>
+
+                        <div class="row cuadrados" style="border-radius: 1rem;">
+                            <div class="col-6 py-3">
+                                <h6>Comisión del creador: </h6>
+                                <h6>Subtotal: </h6>
+                                <h6>Total: </h6>
+                                <h6 class="text-danger">Tu balance:</h6>
+                            </div>
+                            <div class="col-6 py-3">
+                                <h6>10%</h6>
+                                <h6>{{subtotal}} $MFC</h6>
+                                <h6 class="azul">{{total}} $MFC</h6>
+                                <h6 class="text-danger">{{wallet['balance']}} ${{wallet['currency']}}</h6>
+                            </div>
+                        </div>
+                        <br>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="terms" value="acepted"
+                                id="flexCheckDefault">
+                            <label class="form-check-label" for="flexCheckDefault">
+                                <p class="azul"">I have read and agree to the website <a href=" #"
+                                    class="text-decoration-none azul">terms and
+                                    conditions</a>*
+                                </p>
+                            </label>
+                        </div>
+                        <div class="row">
+                            <div class="col d-grid gap-1">
+                                <button type="submit" class="btn btn-primary">Comprar</button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </form>
+        </div>
+    </section>
+    <section class="dark-blue blanco pb-5">
+        <div class="container">
+            <div class="row py-5">
+                <div class="col-6 pb-5">
+                    <h5>Contacto</h5>
+                    <h6>Join our mailing list to stay in the loop with our newest feature releases, NFT drops, and tips
+                        and tricks for navigating OpenSea.</h6>
+                    <div class="div d-flex py-2">
+                        <input class="form-control me-2 dark-blue blanco form-control-lg" type="search"
+                            placeholder="Tu email" name="email_contact" aria-label="Search">
+                        <button type="submit" class="btn btn-primary">Registrar</button>
+                    </div>
+                </div>
+                <div class="col-1"></div>
+                <div class="col-5">
+                    <h5>Join the community</h5>
+                    <div class="div pt-2">
+                        <i class="fa-brands fa-instagram fa-3x"></i>
+                    </div>
+                </div>
+                <hr class="py-3">
+                <div class="col-4">
+                    <img src="https://opensea.io/static/images/logos/opensea-white.svg" width="40px" height="40px"
+                        alt="">
+                    <a href="/" class="text-decoration-none">
+                        <h5 class="blanco py-2">OpenSea</h5>
+                    </a>
+                    <h6>The world’s first and largest digital marketplace for crypto collectibles and non-fungible
+                        tokens (NFTs). Buy, sell, and discover exclusive digital items.</h6>
+                </div>
+
+                <div class="col-2">
+                    <h6>Marketplace</h6>
+                    <p>All NFTs</p>
+                    <p>Art</p>
+                    <p>Collectibles</p>
+                    <p>Domain Names</p>
+                    <p>Music</p>
+                    <p>Photography</p>
+                    <p>Sports</p>
+                    <p>Trading Cards</p>
+                    <p>Utility</p>
+                    <p>Virtual Worlds</p>
+                </div>
+                <div class="col-2">
+                    <h6>My Account</h6>
+                    <p>Profile</p>
+                    <p>Favorites</p>
+                    <p>Watchlist</p>
+                    <p>My Collections</p>
+                    <p>Create</p>
+                    <p>Settings</p>
+                    <h6>Stats</h6>
+                    <p>Rankings</p>
+                    <p>Activity</p>
+                </div>
+                <div class="col-2">
+                    <h6>Resources</h6>
+                    <p>Learn</p>
+                    <p>Help Center</p>
+                    <p>Platform Status</p>
+                    <p>Partners</p>
+                    <p>Taxes</p>
+                    <p>Blog</p>
+                    <p>Docs</p>
+                    <p>Newsletter</p>
+                </div>
+                <div class="col-2">
+                    <h6>Company</h6>
+                    <p>About</p>
+                    <p>Careers</p>
+                    <p>Ventures</p>
+                    <p>Grants</p>
+                </div>
+                <hr class="py-3">
+                <div class="col-6">
+                    <small>© Sr. Cthulhu 2022-2023</small>
+                </div>
+                <div class="col-6 text-end">
+                    <small>Privacy Policy Terms of Service</small>
+                </div>
+            </div>
+        </div>
+    </section>
+</body>
+
+</html>

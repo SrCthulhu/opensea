@@ -50,28 +50,6 @@
 
 <body>
     <section class="negro blanco pb-5">
-        {% if mensaje1 %}
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-12">
-                    <div class="alert alert-success" role="alert">
-                        {{mensaje1}}
-                    </div>
-                </div>
-            </div>
-        </div>
-        {% endif %}
-        {% if mensaje2 %}
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-12">
-                    <div class="alert alert-danger" role="alert">
-                        {{mensaje2}}
-                    </div>
-                </div>
-            </div>
-        </div>
-        {% endif %}
         <div class="container-fluid">
             <div class="row py-2">
                 <div class="col-12">
@@ -92,7 +70,7 @@
                             <input class="form-control me-2 negro blanco" type="search"
                                 placeholder="Buscar artículos, colecciones y cuentas" aria-label="Search">
                         </div>
-                        <a class="navbar-brand pt-2" href="#">
+                        <a class="navbar-brand pt-2" href="/landing">
                             <h6 class="blanco">Explorar</h6>
                         </a>
                         <a class="navbar-brand pt-2" href="#">
@@ -118,9 +96,52 @@
                     </nav>
                 </div>
             </div>
+            {% if mensaje1 %}
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-12">
+                        <div class="alert alert-success" role="alert">
+                            {{mensaje1}}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            {% if mensaje2 %}
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-12">
+                        <div class="alert alert-danger" role="alert">
+                            {{mensaje2}}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            {% if mensaje3 %}
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-12">
+                        <div class="alert alert-primary" role="alert">
+                            {{mensaje3}}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
             <div class="row">
                 <div class="col-1"></div>
                 <div class="col-5">
+                    <a href="/profile/{{nft['owner']}}" class="text-decoration-none">
+                        <div class="col display-block d-flex">
+                            <div class="col-1 text-end">
+                                <i class="fa-solid fa-caret-left fa-4x azul"></i>
+                            </div>
+                            <div class="col-3 mt-3">
+                                <h5 class="blanco">Volver al perfil</h5>
+                            </div>
+                        </div>
+                    </a>
                     <div class="col-10 text-center cuadrados gris"
                         style="border-radius: 1rem; bottom:-1rem; padding: 2rem;">
                         <img src="{{nft['image_url']}}" class="img-fluid" style="border-radius: 0.5rem; width: 35rem;">
@@ -180,6 +201,8 @@
                         </div>
                         <div class="col-4 text-end pt-5">
 
+                            <a href="/auction/{{nft['_id']}}" class="btn btn-primary btn-lg">Ver subasta</a>
+
                             {% if not nft['listed'] %}
                             <a href="/nft/listForSale/{{nft['_id']}}" class="btn btn-primary btn-lg">Listar para
                                 venta</a>
@@ -193,27 +216,33 @@
                         <ul class="list-group list-group-flush gris cuadrados" style="border-radius: 0.5rem;">
                             <li class="list-group-item gris blanco">
                                 {% if nft['listed'] %}
-                                <h6 class="pt-2">Cierre de venta: {{nft['listed']['set_time']}} Hrs</h6>
+                                <h6 class="pt-2">Cierre de venta: {{nft['listed']['time_remaining']}} Hrs</h6>
                                 {% else %}
                                 <h6 class="pt-2 azul">Cierre de venta: - Aún sin tiempo establecido -</h6>
                                 {% endif %}
                             </li>
+                            {% if not nft['listed'] %}
+                            <li class="list-group-item list-group-item-action gris blanco">
+                                <h4>Base: 0 $MFC</h4>
+                                <hr>
+                                <h4 class="azul">El item no ha sido listado para venta.</h4>
+                                <hr>
+                            </li>
+                            {% else %}
                             <li class="list-group-item list-group-item-action gris blanco">
                                 <small class="pt-2">Mejor oferta</small>
-                                <h2>1000 currency <small>| Base: {{nft['nft_value']}} {{nft['currency']}}</small>
+                                <h2>{{nft['listed']['fixed_amount']}} ${{nft['currency']}}<small>| Base:
+                                        {{nft['listed']['auction_amount']}} ${{nft['currency']}}</small>
                                 </h2>
-                                {% if not nft['listed'] %}
-                                <hr>
-                                <h4 class="azul">El item no ha sido listado para venta</h4>
-                                <hr>
-                                {% else %}
+                                {% if (userId | string) != (nft['owner'] | string) %}
                                 <div class="d-flex py-2 d-grid gap-2">
                                     <a href="/nft/add/cart/detail/{{nft['_id']}}" class="btn btn-primary btn-lg">Agregar
                                         al carrito</a>
-                                    <a href="#" class="btn btn-primary btn-lg">Hacer oferta</a>
+                                    <a href="/user/offer/{{nft['_id']}}" class="btn btn-primary btn-lg">Hacer oferta</a>
                                 </div>
                                 {% endif %}
                             </li>
+                            {% endif %}
                         </ul>
                         <!-- Modal 1 Carrito -->
                         <div class="modal fade" id="myModal" tabindex="-1" aria-labelledby="myModalLabel"
@@ -227,6 +256,7 @@
                                     </div>
                                     <div class="modal-body">
                                         <h6 class="pb-3">{{total}} item(s)</h6>
+                                        <hr>
                                         {% if not cartproducts %}
                                         <hr>
                                         <div class="col text-center">
@@ -235,7 +265,6 @@
                                         <hr>
                                         {% endif %}
                                         {% for p in cartproducts %}
-                                        <hr>
                                         <div class="col display-block d-flex">
                                             <div class="col-3">
                                                 <img src="{{p['image_url']}}" width="90rem"
@@ -312,21 +341,36 @@
                             </thead>
                             <thead>
                                 <tr>
-                                    <th scope="col">#</th>
-                                    <th scope="col">Usuario</th>
                                     <th scope="col">Precio</th>
-                                    <th scope="col">Diferencia Base</th>
+                                    <th scope="col">Precio USD</th>
+                                    <th scope="col">Diferencia de Base</th>
                                     <th scope="col">Tiempo restante</th>
+                                    <th scope="col">Usuario</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            {% if not offers %}
+                            <thead>
                                 <tr>
-                                    <th scope="row">1</th>
-                                    <td class="azul">Mark</td>
-                                    <td>0.0 currency</td>
-                                    <td>0%</td>
-                                    <td>15 minutos</td>
+                                    <th></th>
+                                    <th></th>
+                                    <th scope="col" class="azul py-5">
+                                        <h5>No hay ofertas para mostrar</h5>
+                                    </th>
+                                    <th></th>
+                                    <th></th>
                                 </tr>
+                            </thead>
+                            {% endif %}
+                            <tbody>
+                                {% for o in offers %}
+                                <tr>
+                                    <th scope="row">{{o['price']}} $MFC</th>
+                                    <td>$0 </td>
+                                    <td>{{o['floor_difference']}}% (alto o bajo)</td>
+                                    <td>{{o['time_remaining']}}</td>
+                                    <td class="azul">{{o['user_id']['user']}}</td>
+                                </tr>
+                                {% endfor %}
                             </tbody>
                         </table>
                     </div>
@@ -369,11 +413,21 @@
                         </thead>
                         <tbody>
                             <tr>
-                                <td scope="col-1" class="azul">Venta</td>
-                                <td>0.0 currency</td>
-                                <td class="azul"><a href="#" class="text-decoration-none">Luis Daniel</a></td>
-                                <td class="azul"><a href="#" class=" text-decoration-none">Freddy´s</a></td>
-                                <td>14:18 p.m</td>
+                                {% if not orders %}
+                                <td>
+                                    <h6 class="azul">Sin ordenes por acá</h6>
+                                </td>
+                                {% endif %}
+                                {% for o in orders %}
+                                <td scope="col-1" class="azul">{{o['event']}}</td>
+                                <td>{{o['price']}} $MFC</td>
+                                <td class="azul"><a href="#" class="text-decoration-none"></a>
+                                </td>
+                                <td class="azul"><a href="/profile/{{o['receiver']['_id']}}"
+                                        class=" text-decoration-none">{{o['receiver']['user']}}</a>
+                                </td>
+                                <td>{{o['created_at']}}</td>
+                                {% endfor %}
                             </tr>
                         </tbody>
                     </table>
@@ -381,53 +435,49 @@
                 <div class="col-1"></div>
             </div>
             <div class="row">
-                <div class="col-1"></div>
-                <div class="col-10">
-                    <table class="table blanco gris cuadrados" style="border-radius: 0.5rem;">
-                        <thead>
-                            <tr>
-                                <th scope="col">Más de esta colección +</th>
-                                <th></th>
-                                <th></th>
-                                <th></th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                {% for n in listNfts %}
-                                <td scope="col">
-                                    <div class="col-2 py-2">
-                                        <div class="card"
-                                            style="width: 20rem; background-color: rgb(53 56 64); border-radius: 1rem; bottom:-0.5rem; left: 3rem; padding: 0.5rem;">
-                                            <a href="/nft/details/{{n['_id']}}" class="text-decoration-none">
-                                                <img src="{{n['image_url']}}" class="card-img-top"
-                                                    style="border-radius: 0.5rem;">
-                                                <div class="card-body">
-                                                    <h6 class="card-title blanco">{{n['name']}} # {{n['quantity']}}
-                                                    </h6>
-                                                    <p class="card-text blanco">{{n['description']}}.</p>
-                                                    <p class="blanco">{{n['nft_value']}} {{n['currency']}}</p>
-                                            </a>
-                                            <div class="col d-flex">
-                                                <div class="col-6 px-2">
-                                                    <a href="#" class="btn btn-primary btn-sm">Agregar al
-                                                        carrito</a>
-                                                </div>
-                                                <div class="col-6 px-2">
-                                                    <a href="#" class="btn btn-primary btn-sm">Comprar ahora</a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </td>
-                                {% endfor %}
-                            </tr>
-                        </tbody>
-                    </table>
+                <div class="col-12">
+                    <h6 class="pt-3">Más de esta colección +</h6>
+                    <hr>
                 </div>
+                <div class="col-1"></div>
+                <div class="col-10 blanco gris cuadrados" style="border-radius: 0.5rem;">
+
+                    {% for n in listNfts %}
+                    <div class="col-2 py-2">
+                        <div class="card"
+                            style="width: 20rem; background-color: rgb(53 56 64); border-radius: 1rem; bottom:-0.5rem; left: 3rem; padding: 0.5rem;">
+                            <a href="/nft/details/{{n['_id']}}" class="text-decoration-none">
+                                <img src="{{n['image_url']}}" class="card-img-top" style="border-radius: 0.5rem;">
+                                <div class="card-body">
+                                    <h6 class="card-title blanco">{{n['name']}} # {{n['quantity']}}
+                                    </h6>
+                                    <p class="card-text blanco">{{n['description']}}.</p>
+                                    <p class="blanco">{{n['nft_value']}} {{n['currency']}}</p>
+                            </a>
+                            {% if (userId | string) != (nft['owner'] | string) %}
+                            {% if n['listed'] %}
+                            <div class="col d-flex">
+                                <div class="col-6 px-2">
+                                    <a href="/nft/add/cart/profile/{{n['_id']}}" class="btn btn-primary btn-sm">Agregar
+                                        al
+                                        carrito</a>
+                                </div>
+                                <div class="col-6 px-2">
+                                    <a href="/checkout/{{n['_id']}}" class="btn btn-primary btn-sm">Comprar ahora</a>
+                                </div>
+                            </div>
+                            {% else %}
+                            <div class="col text-center">
+                                <h5 class="azul">Item aún sin listar</h5>
+                            </div>
+                            {% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="col-1"></div>
             </div>
-            <div class="col-1"></div>
         </div>
     </section>
     <section class="dark-blue blanco pb-5">
