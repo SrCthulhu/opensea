@@ -21,11 +21,15 @@ def home_view():
     session.pop('user_id', None)
     users = list(db.users.find())
 ############### Arreglar la imagen de perfil de cada usuario #############
-   # for profileImage in users:
-   #     profileImage = db.profile_images.find_one(
-   #         {'user': str(users['_id'])})
-   # print(profileImage)
+    for user in users:
+        maddeable = db.profile_images.find_one(
+            {'user_id': str(user['_id'])})
 
+        if maddeable != None:
+            user['image'] = maddeable['image_url']
+        else:
+            user['image'] = ""
+# Definimos ['image'] en el img source del html
     return render_template("home.html", users=users)
 
 
@@ -194,6 +198,7 @@ def profile_view(id):
         nfts = list(db.nfts.find(
             {'owner': str(user['_id']), 'nft_value': {'$gte': float(minamount), '$lte': float(maxamount)}}))
     else:
+        nfts = list(db.nfts.find({'owner': user['_id']}))
         nfts = list(db.nfts.find({'owner': str(user['_id'])}))
 
     return render_template("profile.html",
@@ -367,9 +372,13 @@ def nft_details_view(id):
     offers = list(db.offers.find({'product_id': nft['_id']}))
     orders = list(db.orders.find({'product_id': nft['_id']}))
 
-   # for sender in orders:
-    #    sender = list(db.users.find({'_id': orders['sender']}))
-   # print(sender)
+    #### Para visualizar quiénes enviaron ese nft a otros ####
+    if orders:
+        for a in orders:
+            sender = db.users.find_one({'_id': ObjectId(a['sender'])})
+    else:
+        sender = None
+######################################################################
     ownerWallet = db.wallets.find_one(
         {'user_id': ObjectId(nft['owner'])})
 
@@ -389,15 +398,12 @@ def nft_details_view(id):
 
     ########### Habilitar botón para completar cierre de subasta ############
 
-    #fechaActual = datetime.now()
-    # if nft == nft['listed'] or nft['listed'] != None:
-     #   fechaMaxima = nft['listed']['created_at']
-    #    diferencia = fechaActual - fechaMaxima
-    #    diferencia_segundos_fechas = diferencia.days * 24 * 3600 + diferencia.seconds
-    # print(fechaActual)
-    # print(fechaMaxima)
-    # print(diferencia)
-    # print(diferencia.seconds)
+    fechaActual = datetime.now()
+    listedIsClosed = False  # booleano
+    if 'listed' in nft:
+        fechaMaxima = nft['listed']['created_at']
+        diferencia = fechaActual - fechaMaxima
+        listedIsClosed = diferencia.seconds > nft['listed']['time_remaining']
 
     mensaje1 = request.args.get('mensaje1')
     mensaje2 = request.args.get('mensaje2')
@@ -409,11 +415,13 @@ def nft_details_view(id):
                            offers=offers,
                            orders=orders,
                            userId=userId,
+                           sender=sender,
                            mensaje1=mensaje1,
                            mensaje2=mensaje2,
                            mensaje3=mensaje3,
                            total=total,
                            montoTotal=montoTotal,
+                           listedIsClosed=listedIsClosed,
                            )
 
 
@@ -931,7 +939,7 @@ def auction_view(id):
     if not session.get('user_id'):
         return redirect('/login')
 
-####### Formúla para iterar sobre listas con un valor int o float y comparar cuál tiene el número mayor #######
+####### Fórmula para iterar sobre listas con un valor int o float y comparar cuál tiene el número mayor #######
 
     nft = db.nfts.find_one({'_id': ObjectId(id)})
     offers = list(db.offers.find({'product_id': nft['_id']}))
@@ -941,11 +949,18 @@ def auction_view(id):
     for i in range(0, len(offers)):
         if offers[i]['price'] > bestOffer['price']:
             bestOffer = offers[i]
-    print(bestOffer)
+  #  print(bestOffer)
+   # print(nft['listed']['auction_amount'])
+
+##### Fórmula Diferencia de porcentaje mayor y menor sobre la base  #########
+    oferta = bestOffer['price'] * 100
+    resultado_porcentaje = oferta / nft['listed']['auction_amount']
+    print(resultado_porcentaje)
 
     return render_template("auction.html",
                            nft=nft,
-                           bestOffer=bestOffer
+                           bestOffer=bestOffer,
+                           resultado_porcentaje=resultado_porcentaje
                            )
 
 
@@ -1000,11 +1015,10 @@ def transfer_nft(id):
     )
 
     #### Cambiamos el Propietario del NFT ####
-
     db.nfts.update_one(
-        {'_id': offer['product_id'], 'owner': owner_wallet['user_id']},
+        {'_id': offer['product_id']},
         {
-            '$set': {'owner': offer['user_id']}
+            '$set': {'owner': offer['user_id']['_id']}
         }
     )
     #### Cambiamos el suministo tambien ####

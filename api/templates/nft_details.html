@@ -82,7 +82,7 @@
                         <a class="navbar-brand pt-2" href="#">
                             <h6 class="blanco">Recursos</h6>
                         </a>
-                        <a href="/profile/{{nft['creator']['_id']}}" class="text-decoration-none">
+                        <a href="/profile/{{userId}}" class="text-decoration-none">
                             <i class="fa-regular fa-user fa-2x blanco"></i>
                         </a>
                         <i class="fa-solid fa-wallet fa-2x"></i>
@@ -201,7 +201,9 @@
                         </div>
                         <div class="col-4 text-end pt-5">
 
+                            {% if listedIsClosed and (userId | string) == (nft['owner'] | string)%}
                             <a href="/auction/{{nft['_id']}}" class="btn btn-primary btn-lg">Ver subasta</a>
+                            {% endif %}
 
                             {% if not nft['listed'] %}
                             <a href="/nft/listForSale/{{nft['_id']}}" class="btn btn-primary btn-lg">Listar para
@@ -364,10 +366,10 @@
                             <tbody>
                                 {% for o in offers %}
                                 <tr>
-                                    <th scope="row">{{o['price']}} $MFC</th>
+                                    <th scope="row" class="azul">{{o['price']}} $MFC</th>
                                     <td>$0 </td>
                                     <td>{{o['floor_difference']}}% (alto o bajo)</td>
-                                    <td>{{o['time_remaining']}}</td>
+                                    <td>{{o['time']}}</td>
                                     <td class="azul">{{o['user_id']['user']}}</td>
                                 </tr>
                                 {% endfor %}
@@ -421,7 +423,8 @@
                                 {% for o in orders %}
                                 <td scope="col-1" class="azul">{{o['event']}}</td>
                                 <td>{{o['price']}} $MFC</td>
-                                <td class="azul"><a href="#" class="text-decoration-none"></a>
+                                <td class="azul"><a href="/profile/{{sender['_id']}}"
+                                        class="text-decoration-none">{{sender['user']}}</a>
                                 </td>
                                 <td class="azul"><a href="/profile/{{o['receiver']['_id']}}"
                                         class=" text-decoration-none">{{o['receiver']['user']}}</a>

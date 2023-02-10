@@ -113,10 +113,10 @@
                         <thead>
                             <tr>
                                 <th scope="col">#</th>
-                                <th scope="col">NFT</th>
-                                <th scope="col">Usuario</th>
-                                <th scope="col">Monto</th>
-                                <th scope="col">Acciones</th>
+                                <th scope="col" class="text-center">NFT</th>
+                                <th scope="col" class="text-center">Usuario</th>
+                                <th scope="col" class="text-center">Monto</th>
+                                <th scope="col" class="text-center">Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -124,11 +124,35 @@
                                 <th scope="row" class="pt-3">1</th>
                                 <td class="pt-3">{{bestOffer['name']}}</td>
                                 <td class="pt-3 azul">{{bestOffer['user_id']['user']}}</td>
-                                <td class="pt-3">{{bestOffer['price']}} $MFC</td>
-                                <td>
-                                    <a href="/transfer/nft/action/{{bestOffer['_id']}}"
-                                        class="btn btn-primary">Transferir</a>
+                                <!-- Condiciones de mayor y menor porcentaje / generación de diferencia de color -->
+                                {% if bestOffer['price'] > nft['listed']['auction_amount'] %}
+                                <td class="pt-3">{{bestOffer['price']}} $MFC <small
+                                        class="text-success">(+{{(resultado_porcentaje | int)}}%)</small>
+                                    <h6 class="azul">[{{nft['listed']['auction_amount']}}]
+                                        $MFC</h6>
                                 </td>
+                                {% endif %}
+
+                                {% if bestOffer['price'] < nft['listed']['auction_amount'] %} <td class="pt-3">
+                                    {{bestOffer['price']}} $MFC <small class="text-danger">(-{{(resultado_porcentaje |
+                                        int)}}%)</small>
+                                    <h6 class="azul">[{{nft['listed']['auction_amount']}}]
+                                        $MFC</h6>
+                                    </td>
+                                    {% endif %}
+
+                                    {% if bestOffer['price'] == nft['listed']['auction_amount'] %} <td class="pt-3">
+                                        {{bestOffer['price']}} $MFC <small class="text-warning">({{(resultado_porcentaje
+                                            | int)}}%)</small>
+                                        ==<h6 class="azul">[{{nft['listed']['auction_amount']}}]
+                                            $MFC</h6>
+                                    </td>
+                                    {% endif %}
+
+                                    <td>
+                                        <a href="/transfer/nft/action/{{bestOffer['_id']}}"
+                                            class="btn btn-primary">Transferir</a>
+                                    </td>
                             </tr>
                         </tbody>
                     </table>
