@@ -39,7 +39,7 @@
         }
     </style>
 
-    <title>Crear NFT | OpenSea</title>
+    <title>Datos de usuario | OpenSea</title>
 </head>
 
 <body>
@@ -76,7 +76,7 @@
                         <a class="navbar-brand pt-2" href="#">
                             <h6 class="blanco">Recursos</h6>
                         </a>
-                        <a href="/login" class="text-decoration-none">
+                        <a href="/signin" class="text-decoration-none">
                             <i class="fa-regular fa-user fa-2x blanco"></i>
                         </a>
                         <i class="fa-solid fa-wallet fa-2x"></i>
@@ -91,7 +91,7 @@
             <div class="container-fluid">
                 <div class="row">
                     <div class="col-12">
-                        <div class="alert alert-danger" role="alert">
+                        <div class="alert alert-light" role="alert">
                             {{mensaje1}}
                         </div>
                     </div>
@@ -102,14 +102,14 @@
             <div class="container-fluid">
                 <div class="row">
                     <div class="col-12">
-                        <div class="alert alert-light" role="alert">
+                        <div class="alert alert-danger" role="alert">
                             {{mensaje2}}
                         </div>
                     </div>
                 </div>
             </div>
             {% endif %}
-            <form class="row" action="/nft/creation">
+            <form class="row" action="/upload/user/extra/data/{{user['_id']}}">
                 <div class="col-4 py-5 d-flex px-5">
                     <div class="col-1">
                         <a href="/profile/{{user['_id']}}" class="text-decoration-none">
@@ -121,88 +121,37 @@
                     </div>
                 </div>
                 <div class="col-4 py-5">
-                    <h2>Crear nuevo artículo</h2>
-                    <br>
-                    <small class="gris">* Campos obligatorios</small>
+                    <h3 class="azul">Información adicional de la cuenta</h3>
                     <div class="col py-3">
-                        <h6>imagen, vídeo, audio o modelo 3D *</h6>
-                        <small class="gris">Tipos de archivos compatibles: JPG, PNG, GIF, SVG, MP4, MP3, WAV. Tamaño
-                            máximo:
-                            100
-                            MB</small>
+                        <h6>Agregar portada *</h6>
+                        <small class="gris">Tamaño máximo recomendado: 1280x720p / JPG, PNG, GIF</small>
                     </div>
-                    <form action="/nft/preview">
-                        {% if nftImagePreview == None %}
-                        <div class="col cuadrados"
-                            style="border-radius: 15px; padding-top: 1rem; padding-bottom: 1rem; padding-left: 1rem; padding-right: 1rem;">
-                            <img class="img_client img-fluid" src="https://fl-1.cdn.flockler.com/embed/no-image.svg"
-                                style="border-radius: 0.5rem;">
-                        </div>
-                        {% else %}
-                        <div class="col cuadrados"
-                            style="border-radius: 15px; padding-top: 1rem; padding-bottom: 1rem; padding-left: 1rem; padding-right: 1rem;">
-                            <img class="img_client img-fluid" src="{{nftImagePreview['image_preview']}}"
-                                style="border-radius: 0.5rem;">
-                        </div>
-                        {% endif %}
-                        <div class="col pt-3">
-                            <a id="upload_widget" href="#" class="btn btn-primary">
-                                Cargar contenido NFT
-                            </a>
-                            <button type="submit" class="btn btn-light">Previsualizar</button>
-                        </div>
-                    </form>
+                    <div class="col cuadrados"
+                        style="border-radius: 0.5rem; padding-top: 1rem; padding-bottom: 1rem; padding-left: 1rem; padding-right: 1rem;">
+                        <img class="img-fluid"
+                            src="https://assets-global.website-files.com/6009ec8cda7f305645c9d91b/61a77a4a6e46e5363fbbde1d_purple-pink.png"
+                            style="border-radius: 0.5rem;">
+                    </div>
+                    <div class="col pt-3">
+                        <a id="upload_widget" href="#">
+                            <button class="btn btn-primary btn-lg">Subir</button>
+                        </a>
+                    </div>
                     <input type="hidden" name="image" id="image" />
-
-                    <div class="col py-3">
-                        <label for="exampleFormControlInput1" class="form-label">
-                            <h6>Nombre *</h6>
-                        </label>
-                        <input type="#" class="form-control negro blanco" id="exampleFormControlInput1"
-                            placeholder="Nombre del artículo" name="name">
-                        <label for="exampleFormControlInput1" class="form-label">
-                            <br>
-                            <h6>Enlace externo (opcional)</h6>
-                            <small class="gris">OpenSea incluirá un enlace a esta URL en la página de detalles de este
-                                artículo para que los usuarios puedan hacer clic para obtener más información al
-                                respecto. Puedes crear un enlace a tu propia página web con más detalles.</small>
-                        </label>
-                        <input type="#" class="form-control negro blanco" id="exampleFormControlInput1"
-                            placeholder="https://yoursite.io/category" name="external_link">
-                        <label for="exampleFormControlInput1" class="form-label">
-                            <br>
-                            <h6>Descripción *</h6>
-                            <small class="gris">La descripción se incluirá en la página de detalles del artículo debajo
-                                de su imagen. Se admite la sintaxis Markdown.
-                            </small>
-                        </label>
-                        <input type="#" class="form-control negro blanco" id="exampleFormControlInput1"
-                            placeholder="Proporciona una descripción detallada del artículo." name="description">
-                        <label for="exampleFormControlInput1" class="form-label">
-                            <br>
-                            <h6>Blockchain</h6>
-                        </label>
-
-                        <select class="form-control negro blanco" name="currency" id="">
-                            {% for c in blockchain %}
-                            <option value="{{c['_id']}}">{{c['currency']}}</option>
-                            {% endfor %}
-                        </select>
-                        <label for="exampleFormControlInput1" class="form-label">
-                            <br>
-                            <h6>Suministro *</h6>
-                            <small class="gris">La cantidad de artículos que se puede acuñar. ¡Sin coste de gas para
-                                ti!</small>
-                        </label>
-                        <input type="#" class="form-control negro blanco" id="exampleFormControlInput1" placeholder="0"
-                            name="quantity">
-                    </div>
                     <hr>
                     <div class="col">
-                        <button type="submit" class="btn btn-primary btn-lg">Crear</button>
+                        <label for="exampleFormControlInput1" class="form-label">
+                            <h6>Descripción del perfil *</h6>
+                            <small class="gris">Cuenta a tus compradores de qué trata tu perfil</small>
+                        </label>
+                        <input type="#" class="form-control negro blanco" id="exampleFormControlInput1"
+                            placeholder="Colección de películas" name="description">
+                        <hr>
+                        <div class="col text-center">
+                            <button type="submit" class="btn btn-primary btn-lg">Actualizar datos</button>
+                        </div>
                     </div>
-                </div>
-                <div class="col-4"></div>
+                    <div class="col-4"></div>
             </form>
         </div>
     </section>

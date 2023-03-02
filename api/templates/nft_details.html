@@ -55,12 +55,12 @@
                 <div class="col-12">
                     <nav class="navbar">
                         <div class="col-1 d-flex">
-                            <a href="/">
+                            <a href="/landing">
                                 <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/26/OpenSea_icon.svg/2048px-OpenSea_icon.svg.png"
                                     height="40px" width="40px">
                             </a>
                             <div class="col-1 pt-2 px-2">
-                                <a href="/" class="text-decoration-none">
+                                <a href="/landing" class="text-decoration-none">
                                     <h5 class="blanco">OpenSea</h5>
                                 </a>
                             </div>
@@ -100,7 +100,7 @@
             <div class="container-fluid">
                 <div class="row">
                     <div class="col-12">
-                        <div class="alert alert-success" role="alert">
+                        <div class="alert alert-primary" role="alert">
                             {{mensaje1}}
                         </div>
                     </div>
@@ -171,14 +171,14 @@
                             <hr>
                             <div class="col d-flex">
                                 <div class="col-6">
-                                    <p>Identificador de Wallet:</p>
-                                    <p>Cadena:</p>
+                                    <p>Identificador de wallet:</p>
+                                    <p>Blockchain de wallet:</p>
                                     <p>Fecha de publicado:</p>
                                     <p>Ganancia del Creador:</p>
                                 </div>
                                 <div class="col-6 text-end">
                                     <p class="azul">{{ownerWallet['_id']}}</p>
-                                    <p class="azul">{{ownerWallet['currency']}}</p>
+                                    <p class="azul">${{ownerWallet['currency']}}</p>
                                     <p class="text-secondary">{{nft['creation_date']}}</p>
                                     <p class="text-secondary">10%</p>
                                 </div>
@@ -200,11 +200,11 @@
                             </div>
                         </div>
                         <div class="col-4 text-end pt-5">
-
+                            {% if bestOffer != None and bestOffer != 0 %}
                             {% if listedIsClosed and (userId | string) == (nft['owner'] | string)%}
                             <a href="/auction/{{nft['_id']}}" class="btn btn-primary btn-lg">Ver subasta</a>
                             {% endif %}
-
+                            {% endif %}
                             {% if not nft['listed'] %}
                             <a href="/nft/listForSale/{{nft['_id']}}" class="btn btn-primary btn-lg">Listar para
                                 venta</a>
@@ -218,14 +218,14 @@
                         <ul class="list-group list-group-flush gris cuadrados" style="border-radius: 0.5rem;">
                             <li class="list-group-item gris blanco">
                                 {% if nft['listed'] %}
-                                <h6 class="pt-2">Cierre de venta: {{nft['listed']['time_remaining']}} Hrs</h6>
+                                <h6 class="pt-2">Cierre de venta: {{nft['listed']['time_remaining']}} Segundos</h6>
                                 {% else %}
                                 <h6 class="pt-2 azul">Cierre de venta: - Aún sin tiempo establecido -</h6>
                                 {% endif %}
                             </li>
                             {% if not nft['listed'] %}
                             <li class="list-group-item list-group-item-action gris blanco">
-                                <h4>Base: 0 $MFC</h4>
+                                <h4>Base: 0 ${{currencyNft['currency']}}</h4>
                                 <hr>
                                 <h4 class="azul">El item no ha sido listado para venta.</h4>
                                 <hr>
@@ -233,20 +233,35 @@
                             {% else %}
                             <li class="list-group-item list-group-item-action gris blanco">
                                 <small class="pt-2">Mejor oferta</small>
-                                <h2>{{nft['listed']['fixed_amount']}} ${{nft['currency']}}<small>| Base:
-                                        {{nft['listed']['auction_amount']}} ${{nft['currency']}}</small>
+                                {% if bestOffer == None %}
+                                <h2> 0 ${{currencyNft['currency']}} <small>| Diferencia: 0% | Base:
+                                        {{nft['listed']['auction_amount']}} ${{currencyNft['currency']}}</small>
                                 </h2>
+                                {% else %}
+                                <h2> {{bestOffer['price']}} ${{currencyNft['currency']}} <small>| Diferencia:
+                                        {{(resultado_mayor_porcentaje |int)}}% | Base:
+                                        {{nft['listed']['auction_amount']}} ${{currencyNft['currency']}}</small>
+                                </h2>
+                                {% endif %}
                                 {% if (userId | string) != (nft['owner'] | string) %}
                                 <div class="d-flex py-2 d-grid gap-2">
                                     <a href="/nft/add/cart/detail/{{nft['_id']}}" class="btn btn-primary btn-lg">Agregar
                                         al carrito</a>
+                                    <!--Verificamos si el item está reservado si lo está sale el boton y si el id de sesion coincide-->
+                                    {% if nft['listed']['reserved_item'] == ('on' | string) and (userId | string) ==
+                                    (nft['listed']['reserved_id'] | string) %}
+                                    <a href="/user/offer/{{nft['_id']}}" class="btn btn-primary btn-lg">Hacer
+                                        oferta</a>
+                                    {% elif nft['listed']['reserved_item'] == None %}
                                     <a href="/user/offer/{{nft['_id']}}" class="btn btn-primary btn-lg">Hacer oferta</a>
+
+                                    {% endif %}
                                 </div>
                                 {% endif %}
                             </li>
                             {% endif %}
                         </ul>
-                        <!-- Modal 1 Carrito -->
+                        <!-- Modal cart -->
                         <div class="modal fade" id="myModal" tabindex="-1" aria-labelledby="myModalLabel"
                             aria-hidden="true">
                             <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered">
@@ -283,7 +298,7 @@
                                                     <i class="fa-solid fa-circle-minus blanco fa-2x"></i>
                                                 </a>
                                                 <h6 class="pt-3">{{p['listed']['fixed_amount']}}
-                                                    {{p['nft_currency']}}</h6>
+                                                    ${{p['nft_currency']}}</h6>
                                             </div>
                                         </div>
                                         <hr>
@@ -292,11 +307,11 @@
                                     <div class="modal-footer">
                                         <div class="col-12 display-block d-flex">
                                             <div class="col-6">
-                                                <h5 class="pb-3">Precio total</h5>
+                                                <h5 class="pb-3">Precio sin comisión</h5>
                                                 <h5>Método de pago</h5>
                                             </div>
                                             <div class="col-6 text-end">
-                                                <h5 class="pb-3">{{montoTotal}} ${{cartproducts['nft_currency']}}</h5>
+                                                <h5 class="pb-3">{{montoTotal}} $MFC</h5>
                                             </div>
                                         </div>
                                         <div class="col">
@@ -368,9 +383,24 @@
                                 <tr>
                                     <th scope="row" class="azul">{{o['price']}} $MFC</th>
                                     <td>$0 </td>
-                                    <td>{{o['floor_difference']}}% (alto o bajo)</td>
-                                    <td>{{o['time']}}</td>
-                                    <td class="azul">{{o['user_id']['user']}}</td>
+                                    {% if o['price'] > nft['listed']['auction_amount'] %}
+                                    <td>+{{(0 | int)}}% <h6 class="text-success">(Ganancia)
+                                        </h6>
+                                    </td>
+                                    {% else %}
+                                    {% if o['price'] < nft['listed']['auction_amount'] %} <td>
+                                        -{{(0 | int)}}% <h6 class="text-danger">(Pérdida)</h6>
+                                        </td>
+                                        {% else %}
+                                        {% if o['price'] == nft['listed']['auction_amount'] %}
+                                        <td>=={{(0 | int)}}% <h6 class="text-warning">(Igual)
+                                            </h6>
+                                        </td>
+                                        {% endif %}
+                                        {% endif %}
+                                        {% endif %}
+                                        <td>{{o['time']}}</td>
+                                        <td class="azul">{{o['user_id']['user']}}</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -413,26 +443,30 @@
                                 <th scope="col">Hora</th>
                             </tr>
                         </thead>
+                        {% if not orders %}
                         <tbody>
                             <tr>
-                                {% if not orders %}
                                 <td>
                                     <h6 class="azul">Sin ordenes por acá</h6>
                                 </td>
-                                {% endif %}
-                                {% for o in orders %}
-                                <td scope="col-1" class="azul">{{o['event']}}</td>
-                                <td>{{o['price']}} $MFC</td>
-                                <td class="azul"><a href="/profile/{{sender['_id']}}"
-                                        class="text-decoration-none">{{sender['user']}}</a>
-                                </td>
-                                <td class="azul"><a href="/profile/{{o['receiver']['_id']}}"
-                                        class=" text-decoration-none">{{o['receiver']['user']}}</a>
-                                </td>
-                                <td>{{o['created_at']}}</td>
-                                {% endfor %}
                             </tr>
                         </tbody>
+                        {% endif %}
+                        {% for o in orders %}
+                        <tbody>
+                            <tr>
+                                <td scope="col" class="azul">{{o['event']}}</td>
+                                <td>{{o['total']}} $MFC</td>
+                                <td class="azul"><a href="/profile/{{o['sender_user']['_id']}}"
+                                        class="text-decoration-none">{{o['sender_user']['user']}}</a>
+                                </td>
+                                <td class="azul"><a href="/profile/{{o['receiver_user']['_id']}}"
+                                        class=" text-decoration-none">{{o['receiver_user']['user']}}</a>
+                                </td>
+                                <td>{{o['created_at']}}</td>
+                            </tr>
+                        </tbody>
+                        {% endfor %}
                     </table>
                 </div>
                 <div class="col-1"></div>
@@ -448,14 +482,19 @@
                     {% for n in listNfts %}
                     <div class="col-2 py-2">
                         <div class="card"
-                            style="width: 20rem; background-color: rgb(53 56 64); border-radius: 1rem; bottom:-0.5rem; left: 3rem; padding: 0.5rem;">
+                            style="width: 15rem; background-color: rgb(53 56 64); border-radius: 1rem; bottom:-0.5rem; left: 3rem; padding: 0.5rem;">
                             <a href="/nft/details/{{n['_id']}}" class="text-decoration-none">
                                 <img src="{{n['image_url']}}" class="card-img-top" style="border-radius: 0.5rem;">
                                 <div class="card-body">
                                     <h6 class="card-title blanco">{{n['name']}} # {{n['quantity']}}
                                     </h6>
                                     <p class="card-text blanco">{{n['description']}}.</p>
-                                    <p class="blanco">{{n['nft_value']}} {{n['currency']}}</p>
+                                    {% if n['listed'] %}
+                                    <p class="blanco">{{n['listed']['fixed_amount']}} ${{blockchain['currency']}}</p>
+                                    {% else %}
+                                    <p class="blanco">0 ${{blockchain['currency']}}</p>
+                                    {% endif %}
+                                </div>
                             </a>
                             {% if (userId | string) != (nft['owner'] | string) %}
                             {% if n['listed'] %}

@@ -88,12 +88,12 @@
                 <div class="col-12">
                     <nav class="navbar">
                         <div class="col-1 d-flex">
-                            <a href="/">
+                            <a href="/landing">
                                 <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/26/OpenSea_icon.svg/2048px-OpenSea_icon.svg.png"
                                     height="40px" width="40px">
                             </a>
                             <div class="col-1 pt-2 px-2">
-                                <a href="/" class="text-decoration-none">
+                                <a href="/landing" class="text-decoration-none">
                                     <h5 class="blanco">OpenSea</h5>
                                 </a>
                             </div>
@@ -103,7 +103,7 @@
                             <input class="form-control me-2 negro blanco" type="search"
                                 placeholder="Buscar artículos, colecciones y cuentas" aria-label="Search">
                         </div>
-                        <a class="navbar-brand pt-2" href="#">
+                        <a class="navbar-brand pt-2" href="/landing">
                             <h6 class="blanco">Explorar</h6>
                         </a>
                         <a class="navbar-brand pt-2" href="#">
@@ -203,9 +203,8 @@
                                 <hr>
                                 <h6>{{product['listed']['fixed_amount']}} ${{product['nft_currency']}}</h6>
                                 <h6>Categoría: {{product['listed']['category']}}</h6>
-                                <h6 class="azul">Propietario actual: {{product['owner']}}</h6>
+                                <h6 class="azul">Propietario actual: {{nftOwner['user']}}</h6>
                                 <h6 class="text-secondary">Creado por: {{product['creator']['user']}}</h6>
-                                <h6>Tiempo Restante: {{product['listed']['created_at']}} Hrs</h6>
                             </div>
                             <hr>
                         </div>

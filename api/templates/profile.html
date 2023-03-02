@@ -80,12 +80,12 @@
                 <div class="col-12">
                     <nav class="navbar">
                         <div class="col-1 d-flex">
-                            <a href="/">
+                            <a href="/landing">
                                 <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/26/OpenSea_icon.svg/2048px-OpenSea_icon.svg.png"
                                     height="40px" width="40px">
                             </a>
                             <div class="col-1 pt-2 px-2">
-                                <a href="/" class="text-decoration-none">
+                                <a href="/landing" class="text-decoration-none">
                                     <h5 class="blanco">OpenSea</h5>
                                 </a>
                             </div>
@@ -107,7 +107,7 @@
                         <a class="navbar-brand pt-2" href="#">
                             <h6 class="blanco">Recursos</h6>
                         </a>
-                        <a href="/signin" class="text-decoration-none">
+                        <a href="/login" class="text-decoration-none">
                             <i class="fa-regular fa-user fa-2x blanco"></i>
                         </a>
                         <i class="fa-solid fa-wallet fa-2x"></i>
@@ -123,8 +123,13 @@
             </div>
             <div class="row">
                 <div class="col-12 position-relative">
-                    <img class="img-fluid" src="https://images4.alphacoders.com/903/903952.jpg" alt=""
-                        style="border-radius:2rem; width: 500rem; height: 40rem;">
+                    {% if not 'extra' in user %}
+                    <img class="img-fluid" src="https://wallpaperaccess.com/full/2903163.jpg" alt=""
+                        style="border-radius:1.5rem; width: 500rem; height: 41rem;">
+                    {% else %}
+                    <img class="img_client img-fluid" src="{{user['extra']['front']}}" alt=""
+                        style="border-radius:1.5rem; width: 500rem; height: 41rem;">
+                    {% endif %}
                     {% if not userImage %}
                     <div class="position-absolute negro"
                         style="border-radius: 1rem; bottom:-0.5rem; left: 3rem; width: 168px; padding: 0.5rem;">
@@ -147,7 +152,7 @@
                     <form class="col d-flex" action="/upload/image">
                         <h2>{{user['user']}}</h2>
 
-                        {% if userId == user['_id'] %}
+                        {% if userId == (user['_id'] | string) %}
                         <div class="col-6 d-flex px-5">
                             <a id="upload_widget" href="#" class="btn btn-outline-light btn-sm">
                                 <h6 class="pt-2">Cambiar imagen</h6>
@@ -157,31 +162,42 @@
                                 <h6 class="pt-2">Actualizar</h6>
                             </button>
                             <input type="hidden" name="image" id="image" />
+                            <div class="col-1"></div>
+                            <div class="col-1 pt-1">
+                                <a href="/user/extra/info/{{user['_id']}}" class="text-decoration-none">
+                                    <i class="fa-solid fa-bars fa-2x blanco"></i>
+                                </a>
+                            </div>
+
                         </div>
                         {% endif %}
-
                     </form>
-                    <h6 class="py-3 azul">Wallet: {{userWallet['_id']}} >>> Balance: {{userWallet['balance']}}</h6>
-                    <h6>Se ha unido: {{user['user_created_at']}}</h6>
+                    <h5 class="py-3 azul">Id de Wallet: {{userWallet['_id']}} >>> Balance: {{userWallet['balance']}}
+                        ${{userWallet['currency']}}</h5>
+                    <p>Se ha unido en: {{user['user_created_at']}}</p>
+                    <p>Cantidad de NFTS: {{user['nfts']}} / Último NFT creado en: date / Comisión del
+                        creador: 10% / Blockchain más usada: {{userWallet['currency']}}</p>
                     <hr>
-                    <small>Artículos {{user['nfts']}} • Último NFT creado {{ ['creation_date']}} • Comisión del
-                        creador
-                        10%
-                        • Cadena {{userWallet['name']}}</small>
-                    <br>
-                    <br>
-                    <p>Descripción del perfil</p>
+                    <h5>Descripción:</h5>
+                    {% if not 'extra' in user %}
+                    <p class="azul">Sin descripción.</p>
+                    {% else %}
+                    <p class="azul">{{user['extra']['description']}}</p>
+                    {% endif %}
                 </div>
                 <div class="col-3"></div>
+                {% if userId == (user['_id'] | string) %}
                 <div class="col-1 pt-3">
                     <a href="/blockchains" class="btn btn-outline-light btn-sm">Obtener blockchain</a>
                 </div>
                 <div class="col-1 pt-3 text-center">
                     <a href="/creation" class="btn btn-primary">Crear NFT</a>
                 </div>
+
                 <div class="col-1 pt-3">
                     <i class="fa-solid fa-share-nodes fa-2x"></i>
                 </div>
+                {% endif %}
             </div>
             <!-- Modal -->
             <div class="modal fade" id="myModal" tabindex="-1" aria-labelledby="myModalLabel" aria-hidden="true">
@@ -217,7 +233,7 @@
                                         <i class="fa-solid fa-circle-minus blanco fa-2x"></i>
                                     </a>
                                     <h6 class="pt-3">{{p['listed']['fixed_amount']}}
-                                        {{p['nft_currency']}}</h6>
+                                        ${{p['nft_currency']}}</h6>
                                 </div>
                             </div>
                             <hr>
@@ -226,11 +242,11 @@
                         <div class="modal-footer">
                             <div class="col-12 display-block d-flex">
                                 <div class="col-6">
-                                    <h5 class="pb-3">Precio total</h5>
+                                    <h5 class="pb-3">Precio sin comisión</h5>
                                     <h5>Método de pago</h5>
                                 </div>
                                 <div class="col-6 text-end">
-                                    <h5 class="pb-3">{{montoTotal}} ${{cartproducts['nft_currency']}}</h5>
+                                    <h5 class="pb-3">{{montoTotal}} $MFC</h5>
                                 </div>
                             </div>
                             <div class="col">
@@ -326,11 +342,16 @@
                             <div class="card-body">
                                 <h6 class="card-title blanco">{{n['name']}} # {{n['quantity']}}</h6>
                                 <p class="card-text blanco">{{n['description']}}</p>
-                                <p class="blanco">{{n['nft_value']}} {{n['currency']}}</p>
+                                {% if n['listed'] %}
+                                <p class="blanco">{{n['listed']['fixed_amount']}} ${{blockchain['currency']}}</p>
+                                {% else %}
+                                <p class="blanco">0 ${{blockchain['currency']}}</p>
+                                {% endif %}
+                            </div>
                         </a>
                         <!--Hay que usar ( example['x'] |string) para poder comparar el userId porque sino no entiende que son iguales los id-->
                         {% if (userId | string) != (user['_id'] | string) %}
-                        {% if n['listed'] %}
+                        {% if n['listed'] and n['listed']['check_fixed'] == 'fixed' %}
                         <div class="col d-flex">
                             <div class="col-6 px-2">
                                 <a href="/nft/add/cart/profile/{{n['_id']}}" class="btn btn-primary btn-sm">Agregar al
@@ -340,16 +361,25 @@
                                 <a href="/checkout/{{n['_id']}}" class="btn btn-primary btn-sm">Comprar ahora</a>
                             </div>
                         </div>
+                        {% if 'listed' in nfts and n['listed']['check_fixed'] == None %}
+                        {% if n['listed']['high_auction'] == 'high_price' %}
+                        <div class="col text-center">
+                            <a href="/user/offer/{{n['_id']}}" class="btn btn-primary">Hacer
+                                oferta</a>
+                        </div>
                         {% else %}
                         <div class="col text-center">
                             <h5 class="azul">Item aún sin listar</h5>
                         </div>
                         {% endif %}
                         {% endif %}
+                        {% endif %}
+                        {% endif %}
+
                     </div>
                 </div>
+                {% endfor %}
             </div>
-            {% endfor %}
         </div>
         </div>
     </section>

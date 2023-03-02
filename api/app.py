@@ -15,12 +15,15 @@ app.secret_key = env['FLASK_SECRET_KEY']
 client = MongoClient(env['MONGO_DB_URI'])
 db = client.opensea
 
+account_sid = env['TWILIO_ID']
+auth_token = env['TWILIO_AUTH_TOKEN']
+clientTwilio = Client(account_sid, auth_token)
+
 
 @app.route("/")
 def home_view():
     session.pop('user_id', None)
     users = list(db.users.find())
-############### Arreglar la imagen de perfil de cada usuario #############
     for user in users:
         maddeable = db.profile_images.find_one(
             {'user_id': str(user['_id'])})
@@ -30,16 +33,30 @@ def home_view():
         else:
             user['image'] = ""
 # Definimos ['image'] en el img source del html
-    return render_template("home.html", users=users)
+    nfts = list(db.nfts.find())
+    for n in nfts:
+        blockchain = db.blockchains.find_one({'_id': ObjectId(n['currency'])})
+
+    return render_template("home.html",
+                           users=users,
+                           nfts=nfts,
+                           blockchain=blockchain
+                           )
 
 
 @app.route("/landing")
 def landing_view():
-
     users = list(db.users.find())
-    userProfilesImages = db.profile_images.find_one({'user_id': users})
+    for user in users:
+        maddeable = db.profile_images.find_one(
+            {'user_id': str(user['_id'])})
 
-    return render_template("landing.html", userProfilesImages=userProfilesImages, users=users)
+        if maddeable != None:
+            user['image'] = maddeable['image_url']
+        else:
+            user['image'] = ""
+
+    return render_template("landing.html", users=users)
 
 
 @app.route("/signin")
@@ -124,23 +141,24 @@ def login_view():
 
 @app.route("/login/users")
 def login_users():
-    userEmail = request.args.get('email')
+
     userName = request.args.get('userName')
     userPassword = request.args.get('password')
 
-    if userEmail == "" or userName == "":
+    userDocument = db.users.find_one(
+        {'$or': [{'email': userName}, {'user': userName}]})
+
+    print(userDocument)
+    if userName == "":
         return redirect('/login?mensaje=Ingresa el mail o nombre de usuario')
 
     if userPassword == "":
         return redirect('/login?mensaje=Ingresa la contraseña')
 
-    userDocument = db.users.find_one(
-        {'$or': [{'email': userEmail}, {'user': userEmail}]})
-
     if not userDocument:
         return redirect('/login?mensaje=El usuario no existe')
 
-    if userDocument['password'] != userPassword or userDocument['email'] != userEmail or userDocument['user'] != userName:
+    if userDocument['password'] != userPassword:
         return redirect('/login?mensaje=La contraseña o el usuario es inválido')
 
     session['user_id'] = str(userDocument['_id'])
@@ -157,12 +175,13 @@ def profile_view(id):
     mensaje1 = request.args.get('mensaje1')
     mensaje2 = request.args.get('mensaje2')
     userWallet = db.wallets.find_one({'user_id': ObjectId(id)})
+
     if not userWallet:
         return abort(404)
-#### No me muestra el boton de cargar imágenes aunque el id de la sesion sea el mismo #####
+
     print(userId)
     print(user['_id'])
-####### LAS IMAGENES NO SE ESTÁN CREANDO EN DB ##############
+
 #### Enumerar el carrito ####
     cartproducts = list(db.cart.find({'user_id': userId}))
     i = 0
@@ -198,14 +217,22 @@ def profile_view(id):
         nfts = list(db.nfts.find(
             {'owner': str(user['_id']), 'nft_value': {'$gte': float(minamount), '$lte': float(maxamount)}}))
     else:
-        nfts = list(db.nfts.find({'owner': user['_id']}))
-        nfts = list(db.nfts.find({'owner': str(user['_id'])}))
+        nfts = list(db.nfts.find(
+            {'owner': user['_id'], 'owner': str(user['_id'])}))
+
+    blockchain = None
+    if nfts:
+        for block in nfts:
+            blockchain = db.blockchains.find_one(
+                {'_id': ObjectId(block['currency'])})
+            print(blockchain['currency'])
 
     return render_template("profile.html",
                            user=user,
                            userImage=userImage,
                            nfts=nfts,
                            userWallet=userWallet,
+                           blockchain=blockchain,
                            userId=userId,
                            mensaje1=mensaje1,
                            mensaje2=mensaje2,
@@ -213,6 +240,58 @@ def profile_view(id):
                            total=total,
                            montoTotal=montoTotal
                            )
+
+
+@app.route("/user/extra/info/<id>")
+def extra_info_view(id):
+    if not session.get('user_id'):
+        return redirect('/login')
+    user = db.users.find_one({'_id': ObjectId(id)})
+    mensaje1 = request.args.get('mensaje1')
+    mensaje2 = request.args.get('mensaje2')
+    return render_template("user_extra_info.html",
+                           user=user,
+                           mensaje1=mensaje1,
+                           mensaje2=mensaje2)
+
+
+@app.route("/upload/user/extra/data/<id>")
+def upload_user_info(id):
+    if not session.get('user_id'):
+        return redirect('/login')
+
+    imageUrl = request.args.get('image')
+    description = request.args.get('description')
+    user = db.users.find_one({'_id': ObjectId(id)})
+
+    newInfo = False
+    if len(description) > 250:
+        return redirect('/user/extra/info/' + str(id) + '?mensaje1=La descripción no puede superar los 250 carácteres')
+
+    if imageUrl != "" or description != "":
+        newInfo = {}
+        newInfo['front'] = imageUrl
+        newInfo['description'] = description
+
+#### Si los datos ya existen los reemplaza ####
+    elif 'extra' in user and newInfo != False:
+        db.users.update_one(
+            {'_id': ObjectId(user['_id'])},
+            {
+                '$set': {'extra': newInfo}
+            }
+        )
+    elif newInfo == False:
+        return redirect('/user/extra/info/' + str(id) + '?mensaje2=Tienes campos vacíos')
+
+#### Subimos datos ####
+    db.users.update_one(
+        {'_id': ObjectId(user['_id'])},
+        {
+            '$set': {'extra': newInfo}
+        }
+    )
+    return redirect('/profile/' + str(id))
 
 
 @app.route("/logout")
@@ -248,10 +327,17 @@ def creation_view():
 
     userId = session.get('user_id')
     user = db.users.find_one({'_id': ObjectId(userId)})
+    blockchain = list(db.blockchains.find())
     nftImagePreview = db.nftsImagePreview.find_one({'user_id': userId})
-    mensaje = request.args.get('mensaje')
+    mensaje1 = request.args.get('mensaje1')
+    mensaje2 = request.args.get('mensaje2')
 
-    return render_template("creation.html", nftImagePreview=nftImagePreview, mensaje=mensaje, user=user)
+    return render_template("creation.html",
+                           blockchain=blockchain,
+                           nftImagePreview=nftImagePreview,
+                           mensaje1=mensaje1,
+                           mensaje2=mensaje2,
+                           user=user)
 
 
 @app.route("/nft/preview")
@@ -277,16 +363,15 @@ def create():
     nameNFT = request.args.get('name')
     externalLink = request.args.get('external_link')
     description = request.args.get('description')
-    quantity = request.args.get('quantity')
     currency = request.args.get('currency')
-    nftValue = request.args.get('value')
+    quantity = request.args.get('quantity')
     userId = session.get('user_id')
     user_object = db.users.find_one({'_id': ObjectId(userId)})
 
-    if quantity == "" or quantity == None or nftValue == "" or nftValue == None:
-        return redirect('/creation?mensaje=Completa los campos obligatorios')
+    if quantity == "" or quantity == None:
+        return redirect('/creation?mensaje1=Completa los campos obligatorios')
 
-    if imageUrl != "" or nameNFT != "" or description != "" or quantity != 0 or currency != "" or nftValue != 0:
+    if imageUrl != "" or nameNFT != "" or description != "" or quantity != 0 or currency != "":
         time = datetime.now()
 
         newNft = {}
@@ -296,13 +381,12 @@ def create():
         newNft['description'] = description
         newNft['quantity'] = int(quantity)
         newNft['currency'] = currency
-        newNft['nft_value'] = float(nftValue)
         newNft['owner'] = userId
         newNft['creator'] = user_object
         newNft['creation_date'] = time.strftime('%d-%m-%Y, %H:%M:%S')
 
     else:
-        return redirect('/creation?mensaje=Completa los campos obligatorios')
+        return redirect('/creation?mensaje1=Completa los campos obligatorios')
 
     db.nfts.insert_one(newNft)
 
@@ -370,14 +454,22 @@ def nft_details_view(id):
     nft = db.nfts.find_one({'_id': ObjectId(id)})
     listNfts = list(db.nfts.find({'owner': nft['owner']}))
     offers = list(db.offers.find({'product_id': nft['_id']}))
-    orders = list(db.orders.find({'product_id': nft['_id']}))
+
+#### Mostramos las blockchains por id ####
+    currencyNft = db.blockchains.find_one(
+        {'_id': ObjectId(nft['currency'])})
+    for block in listNfts:
+        blockchain = db.blockchains.find_one(
+            {'_id': ObjectId(block['currency'])})
+############################################
+    orders = list(db.orders.find({'product': str(nft['_id'])}))
 
     #### Para visualizar quiénes enviaron ese nft a otros ####
-    if orders:
-        for a in orders:
-            sender = db.users.find_one({'_id': ObjectId(a['sender'])})
-    else:
-        sender = None
+    for order in orders:
+        order['sender_user'] = db.users.find_one(
+            {'_id': ObjectId((order['seller']))})
+        order['receiver_user'] = db.users.find_one(
+            {'_id': ObjectId(order['receiver'])})
 ######################################################################
     ownerWallet = db.wallets.find_one(
         {'user_id': ObjectId(nft['owner'])})
@@ -400,10 +492,30 @@ def nft_details_view(id):
 
     fechaActual = datetime.now()
     listedIsClosed = False  # booleano
-    if 'listed' in nft:
+    if 'listed' in nft and nft['listed'] != False:
         fechaMaxima = nft['listed']['created_at']
         diferencia = fechaActual - fechaMaxima
         listedIsClosed = diferencia.seconds > nft['listed']['time_remaining']
+
+    resultado_mayor_porcentaje = False
+    resultado_menor_porcentaje = False
+ ################# El mejor ofertante hasta el momento Fórmula ##################
+    if not offers:
+        bestOffer = None
+
+    else:
+        bestOffer = offers[0]
+        for i in range(0, len(offers)):
+            if offers[i]['price'] > bestOffer['price']:
+                bestOffer = offers[i]
+##### Fórmula Diferencia de porcentaje mayor y menor sobre la base  #########
+        resultado_mayor_porcentaje = (bestOffer['price'] - nft['listed']
+                                      ['auction_amount']) / nft['listed']['auction_amount'] * 100
+
+        for i in offers:
+            resultado_menor_porcentaje = (
+                i['price'] - nft['listed']['auction_amount']) / nft['listed']['auction_amount'] * 100
+            print(resultado_menor_porcentaje)
 
     mensaje1 = request.args.get('mensaje1')
     mensaje2 = request.args.get('mensaje2')
@@ -413,9 +525,13 @@ def nft_details_view(id):
                            ownerWallet=ownerWallet,
                            cartproducts=cartproducts,
                            offers=offers,
+                           currencyNft=currencyNft,
+                           blockchain=blockchain,
                            orders=orders,
                            userId=userId,
-                           sender=sender,
+                           bestOffer=bestOffer,
+                           resultado_mayor_porcentaje=resultado_mayor_porcentaje,
+                           resultado_menor_porcentaje=resultado_menor_porcentaje,
                            mensaje1=mensaje1,
                            mensaje2=mensaje2,
                            mensaje3=mensaje3,
@@ -430,8 +546,20 @@ def list_nft_view(id):
     if not session.get('user_id'):
         return redirect('/login')
     nft = db.nfts.find_one({'_id': ObjectId(id)})
-    mensaje = request.args.get('mensaje')
-    return render_template("nft_list_item.html", nft=nft, mensaje=mensaje)
+    blockchain = db.blockchains.find_one(
+        {'_id': ObjectId(nft['currency'])})
+    mensaje1 = request.args.get('mensaje1')
+    mensaje2 = request.args.get('mensaje2')
+    mensaje3 = request.args.get('mensaje3')
+    mensaje4 = request.args.get('mensaje4')
+    return render_template("nft_list_item.html",
+                           nft=nft,
+                           blockchain=blockchain,
+                           mensaje1=mensaje1,
+                           mensaje2=mensaje2,
+                           mensaje3=mensaje3,
+                           mensaje4=mensaje4
+                           )
 
 
 @app.route("/nft/list/action/<id>")
@@ -446,15 +574,22 @@ def listed(id):
     auction_amount = request.args.get('auction_amount')
     time_remaining = request.args.get('time')
     category = request.args.get('category')
-    check_reserved_item = request.args.get('reserved_item')
-    reserved_wallet_id = request.args.get('reserved_buyer_id')
+    reserved_item = request.args.get('reserved_item')
+    reserved_name = request.args.get('reserved_name')
+    user_name = {'user': 'No', '_id': 'No'}
 
-    if fixed_amount == "":
-        fixed_amount = float(0)
-    if auction_amount == "":
-        auction_amount = float(0)
+    if not fixed_amount.isnumeric() or float(fixed_amount) <= float(0) and not auction_amount.isnumeric() or float(auction_amount) <= float(0):
+        return redirect('/nft/listForSale/' + str(id) + '?mensaje2=No puedes publicar un NFT por 0$ / valor inválido')
+    if not time_remaining:
+        return redirect('/nft/listForSale/' + str(id) + '?mensaje1=Tienes campos vacíos')
+    if reserved_item == None and reserved_name != "":
+        return redirect('/nft/listForSale/' + str(id) + '?mensaje3=Debes hacer check en reservar para comprador específico')
 
-    if fixed_amount != float(0) or auction_amount != float(0) or time_remaining != "Duración" or category != "Categoría del artículo":
+    if reserved_item != None and reserved_name != "":
+
+        user_name = db.users.find_one(
+            {'$or': [{'email': reserved_name}, {'user': reserved_name}]})
+    if user_name:
 
         newNftListed = {}
         newNftListed['check_fixed'] = check_fixed
@@ -465,10 +600,12 @@ def listed(id):
         newNftListed['created_at'] = datetime.now()
         newNftListed['time_remaining'] = int(time_remaining)
         newNftListed['category'] = category
-        newNftListed['check_reserved_item'] = check_reserved_item
-        newNftListed['reserved_wallet_id'] = reserved_wallet_id
+        newNftListed['reserved_item'] = reserved_item
+        newNftListed['reserved_name'] = user_name['user']
+        newNftListed['reserved_id'] = str(user_name['_id'])
+
     else:
-        return redirect('/nft/listForSale/' + str(id) + '?mensaje=Tienes campos vacíos')
+        return redirect('/nft/listForSale/' + str(id) + '?mensaje4=Usuario no encontrado, intente nuevamente, asegúrese de colocar los datos exactos')
 
     nft = db.nfts.find_one({'_id': ObjectId(id)})
 
@@ -489,6 +626,7 @@ def add_cart(id):
 
     userId = session.get('user_id')
     nft = db.nfts.find_one({'_id': ObjectId(id)})
+    blockchain = db.blockchains.find_one({'_id': ObjectId(nft['currency'])})
 
     addNew = {}
     addNew['product_id'] = nft['_id']
@@ -496,8 +634,7 @@ def add_cart(id):
     addNew['image_url'] = nft['image_url']
     addNew['listed'] = nft['listed']
     addNew['quantity'] = 0
-    addNew['nft_value'] = nft['nft_value']
-    addNew['nft_currency'] = nft['currency']
+    addNew['nft_currency'] = blockchain['currency']
     addNew['creator'] = nft['creator']
     addNew['owner'] = nft['owner']
     addNew['user_id'] = str(userId)
@@ -526,6 +663,7 @@ def add_cart_profile(id):
 
     userId = session.get('user_id')
     nft = db.nfts.find_one({'_id': ObjectId(id)})
+    blockchain = db.blockchains.find_one({'_id': ObjectId(nft['currency'])})
 
     addNew = {}
     addNew['product_id'] = nft['_id']
@@ -533,8 +671,7 @@ def add_cart_profile(id):
     addNew['image_url'] = nft['image_url']
     addNew['listed'] = nft['listed']
     addNew['quantity'] = 0
-    addNew['nft_value'] = nft['nft_value']
-    addNew['nft_currency'] = nft['currency']
+    addNew['nft_currency'] = blockchain['currency']
     addNew['creator'] = nft['creator']
     addNew['owner'] = nft['owner']
     addNew['user_id'] = str(userId)
@@ -551,7 +688,7 @@ def add_cart_profile(id):
                 {'quantity': cartproduct['quantity'] + 1}
              }
         )
-    return redirect('/profile/' + str(userId) + '?mensaje1=Item agregado al carro')
+    return redirect('/profile/' + str(nft['owner']) + '?mensaje1=Item agregado al carro')
 
 
 @app.route("/remove/cart/product/<id>")
@@ -594,7 +731,10 @@ def checkout_view():
         subtotal = subtotal + \
             float(p['listed']['fixed_amount'] * p['quantity'])
     # operación para sumar iva ó comisión al total en este caso 10% del creador .
-    total = float(subtotal) * 10 / 100
+    total = float(subtotal) + float(subtotal) * 10 / 100
+
+    for owner in cartproducts:
+        nftOwner = db.users.find_one({'_id': ObjectId(owner['owner'])})
 
     wallet = db.wallets.find_one({'user_id': ObjectId(userId)})
     mensaje1 = request.args.get('mensaje1')
@@ -605,6 +745,7 @@ def checkout_view():
                            subtotal=subtotal,
                            total=total,
                            userId=userId,
+                           nftOwner=nftOwner,
                            wallet=wallet,
                            mensaje1=mensaje1,
                            mensaje2=mensaje2,
@@ -657,7 +798,10 @@ def create_order_action():
         'terms': terms,
     }
     newOrder['event'] = "Venta"
-    newOrder['user_id'] = userId
+    for owners in cartproducts:
+        # TODO: todo mal, porque siempre es el ultimo bicho
+        newOrder['seller'] = owners['owner']
+    newOrder['receiver'] = str(userId)
     newOrder['cart'] = cartproducts
     newOrder['total'] = total
     newOrder['created_at'] = datetime.now()
@@ -671,7 +815,11 @@ def create_order_action():
     for product in cartproducts:
         owner_wallet = db.wallets.find_one(
             {'user_id': ObjectId(product['owner'])})
+        creator_wallet = db.wallets.find_one(
+            {'user_id': ObjectId(product['creator']['_id'])})
+
     print(owner_wallet)
+    print(creator_wallet)
 
     if client_wallet['balance'] < total:
         return redirect('/checkout?mensaje3=Balance insuficiente')
@@ -683,6 +831,7 @@ def create_order_action():
             '$set': {'balance': client_wallet['balance'] - total}
         }
     )
+
     db.wallets.update_one(
         {'user_id': owner_wallet['user_id'],
          'balance': owner_wallet['balance']},
@@ -690,13 +839,37 @@ def create_order_action():
             '$set': {'balance': owner_wallet['balance'] + total}
         }
     )
+    # Aplicamos la comisión del 10% al creador de (LOS) NFT en el carro, acá es con el monto
+    #### fijo de lista (NO SUBASTADO) ####
+    for quantity in cartproducts:
+        base = 0
+        final_quantity = base + quantity['quantity']
+        print(final_quantity)
+    subtotal = 0
+    subtotal = subtotal + total * final_quantity
+    # El resultado será solo el porcentaje del total.
+    feeCreator = float(subtotal) * 10 / 100
 
+    db.wallets.update_one(
+        {'user_id': owner_wallet['user_id'],
+         'balance': owner_wallet['balance']},
+        {
+            '$set': {'balance': owner_wallet['balance'] - feeCreator}
+        }
+    )
+    db.wallets.update_one(
+        {'user_id': creator_wallet['user_id'],
+         'balance': creator_wallet['balance']},
+        {
+            '$set': {'balance': creator_wallet['balance'] + feeCreator}
+        }
+    )
     #### Cambiamos el Propietario de los NFT en el carrito y la cantidad de suministro cambia ####
     for product in cartproducts:
         db.nfts.update_one(
             {'_id': product['product_id'], 'owner': product['owner']},
             {
-                '$set': {'owner': newOrder['user_id']}
+                '$set': {'owner': newOrder['receiver']}
             }
         )
         productId = db.nfts.find_one({'_id': product['product_id']})
@@ -721,8 +894,14 @@ def create_order_action():
 def order_view(id):
     if not session.get('user_id'):
         return redirect('/login')
+
     order = db.orders.find_one({'_id': ObjectId(id)})
-    return render_template("order_completed.html", order=order)
+    user_name = db.users.find_one({'_id': ObjectId(order['receiver'])})
+
+    return render_template("order_completed.html",
+                           order=order,
+                           user_name=user_name
+                           )
 ################################ Fin Proceso de orden con carrito ##################################################
 
 
@@ -741,6 +920,7 @@ def checkout_view_product(id):
     total = float(subtotal) + float(subtotal) * 10 / 100
 
     wallet = db.wallets.find_one({'user_id': ObjectId(userId)})
+    nftOwner = db.users.find_one({'_id': ObjectId(product['owner'])})
     mensaje1 = request.args.get('mensaje1')
     mensaje2 = request.args.get('mensaje2')
     mensaje3 = request.args.get('mensaje3')
@@ -750,6 +930,7 @@ def checkout_view_product(id):
                            total=total,
                            userId=userId,
                            wallet=wallet,
+                           nftOwner=nftOwner,
                            mensaje1=mensaje1,
                            mensaje2=mensaje2,
                            mensaje3=mensaje3
@@ -784,6 +965,8 @@ def create_order_single(id):
 
     userId = session.get('user_id')
 
+    receiverUser = db.users.find_one({'_id': ObjectId(userId)})
+
     newOrder = {}
     newOrder['client'] = {
         'document': document,
@@ -797,8 +980,9 @@ def create_order_single(id):
         'terms': terms,
     }
     newOrder['event'] = "Venta"
-    newOrder['user_id'] = userId
-    newOrder['product'] = product
+    newOrder['seller'] = product['owner']
+    newOrder['receiver'] = str(receiverUser['_id'])
+    newOrder['product'] = str(product['_id'])
     newOrder['total'] = total
     newOrder['created_at'] = datetime.now()
 
@@ -810,6 +994,10 @@ def create_order_single(id):
 
     owner_wallet = db.wallets.find_one({'user_id': ObjectId(product['owner'])})
     print(owner_wallet)
+
+    creator_wallet = db.wallets.find_one(
+        {'user_id': ObjectId(product['creator']['_id'])})
+    print(creator_wallet)
 
     if client_wallet['balance'] < total:
         return redirect('/checkout/' + str(product['_id']) + '?mensaje3=Balance insuficiente')
@@ -828,12 +1016,33 @@ def create_order_single(id):
             '$set': {'balance': owner_wallet['balance'] + total}
         }
     )
+    #### Aplicamos la comisión del 10% al creador del NFT, acá es con el monto fijo de lista (NO SUBASTADO) ####
+    subtotal = 0
+    subtotal = subtotal + \
+        float(product['listed']['fixed_amount'] * product['quantity'])
 
+    feeCreator = float(subtotal) * 10 / 100
+
+    db.wallets.update_one(
+        {'user_id': creator_wallet['user_id'],
+         'balance': creator_wallet['balance']},
+        {
+            '$set': {'balance': creator_wallet['balance'] + feeCreator}
+        }
+    )
+    db.wallets.update_one(
+        {'user_id': owner_wallet['user_id'],
+         'balance': owner_wallet['balance']},
+        {
+            '$set': {'balance': owner_wallet['balance'] - feeCreator}
+        }
+    )
+    print(owner_wallet['user_id'])
     #### Cambiamos el Propietario del NFT y la cantidad de suministro cambia ####
     db.nfts.update_one(
         {'_id': product['_id'], 'owner': product['owner']},
         {
-            '$set': {'owner': newOrder['user_id']}
+            '$set': {'owner': newOrder['receiver']}
         }
     )
     if product['quantity'] > 1:
@@ -843,6 +1052,7 @@ def create_order_single(id):
                 '$set': {'quantity': product['quantity'] - 1}
             }
         )
+
     # Creamos la orden (un solo producto)
     orderCreated = db.orders.insert_one(newOrder)
     orderId = orderCreated.inserted_id
@@ -855,7 +1065,15 @@ def single_order_view(id):
     if not session.get('user_id'):
         return redirect('/login')
     order = db.orders.find_one({'_id': ObjectId(id)})
-    return render_template("single_order_completed.html", order=order)
+    nft = db.nfts.find_one({'_id': ObjectId(order['product'])})
+    blockchain = db.blockchains.find_one({'_id': ObjectId(nft['currency'])})
+    user_name = db.users.find_one({'_id': ObjectId(order['receiver'])})
+    return render_template("single_order_completed.html",
+                           order=order,
+                           blockchain=blockchain,
+                           nft=nft,
+                           user_name=user_name
+                           )
 
 ####################################### Fin proceso de orden individual #####################################
 
@@ -871,14 +1089,12 @@ def offer_view(id):
     mensaje1 = request.args.get('mensaje1')
     mensaje2 = request.args.get('mensaje2')
     mensaje4 = request.args.get('mensaje4')
-    mensaje5 = request.args.get('mensaje5')
     return render_template("user_offer.html",
                            nft=nft,
                            userWallet=userWallet,
                            mensaje1=mensaje1,
                            mensaje2=mensaje2,
-                           mensaje4=mensaje4,
-                           mensaje5=mensaje5)
+                           mensaje4=mensaje4)
 
 
 @app.route("/create/offer/<id>")
@@ -897,11 +1113,8 @@ def create_offer_action(id):
     if price == None or not price.isnumeric():
         return redirect('/user/offer/' + str(nft['_id']) + '?mensaje1=Introduzca un número, llene los campos y no use carácteres especiales:' + ' !*$?¿')
 
-    if float(price) < float(nft['listed']['auction_amount']):
-        return redirect('/user/offer/' + str(nft['_id']) + '?mensaje2=No puedes ofertar por un monto inferior al base')
-
     if float(userWallet['balance']) < float(price):
-        return redirect('/user/offer/' + str(nft['_id']) + '?mensaje4=Tu balance es insuficiente para ofertar')
+        return redirect('/user/offer/' + str(nft['_id']) + '?mensaje2=Tu balance es insuficiente para ofertar')
 
     # Diferencia de segundos entre dos fechas ################## Revisar vista nft_list_item.html
     fechaActual = datetime.now()
@@ -918,7 +1131,7 @@ def create_offer_action(id):
     print(diferencia.seconds)
 
     if diferencia_segundos_fechas > nft['listed']['time_remaining']:
-        return redirect('/user/offer/' + str(nft['_id']) + '?mensaje5=Ya cerró la subasta, no puedes ofertar 😣')
+        return redirect('/user/offer/' + str(nft['_id']) + '?mensaje4=Ya cerró la subasta, no puedes ofertar 😣')
 
     newOffer = {}
     newOffer['product_id'] = nft['_id']
@@ -953,8 +1166,8 @@ def auction_view(id):
    # print(nft['listed']['auction_amount'])
 
 ##### Fórmula Diferencia de porcentaje mayor y menor sobre la base  #########
-    oferta = bestOffer['price'] * 100
-    resultado_porcentaje = oferta / nft['listed']['auction_amount']
+    resultado_porcentaje = (
+        (bestOffer['price'] - nft['listed']['auction_amount']) / nft['listed']['auction_amount']) * 100
     print(resultado_porcentaje)
 
     return render_template("auction.html",
@@ -974,10 +1187,10 @@ def transfer_nft(id):
 
     newOrder = {}
     newOrder['event'] = "Transferencia"
-    newOrder['receiver'] = offer['user_id']
-    newOrder['sender'] = userId
-    newOrder['product_id'] = offer['product_id']
-    newOrder['price'] = offer['price']
+    newOrder['seller'] = userId
+    newOrder['receiver'] = str(offer['user_id']['_id'])
+    newOrder['product'] = str(offer['product_id'])
+    newOrder['total'] = offer['price']
     newOrder['created_at'] = datetime.now()
 
     owner_wallet = db.wallets.find_one({'user_id': ObjectId(userId)})
@@ -1018,7 +1231,7 @@ def transfer_nft(id):
     db.nfts.update_one(
         {'_id': offer['product_id']},
         {
-            '$set': {'owner': offer['user_id']['_id']}
+            '$set': {'owner': str(offer['user_id']['_id'])}
         }
     )
     #### Cambiamos el suministo tambien ####
@@ -1034,8 +1247,15 @@ def transfer_nft(id):
     orderCreated = db.orders.insert_one(newOrder)
     orderId = orderCreated.inserted_id
 
-    # Borrar todas las ofertas del usuario.
-    db.offers.delete_many({'user_id': offer['user_id']})
+    # Borrar todas las ofertas del NFT.
+    db.offers.delete_many({'product_id': productId['_id']})
+    # Actualizamos el campo de nft 'listed' de la base de datos para que no siga listado.
+    db.nfts.update_one(
+        {'_id': productId['_id']},
+        {
+            '$set': {'listed': False}
+        }
+    )
 
     return redirect("/nft/transfer/success/" + str(orderId))
 
@@ -1046,12 +1266,69 @@ def transfer_success_view(id):
         return redirect('/login')
 
     orderId = db.orders.find_one({'_id': ObjectId(id)})
-    nft = db.nfts.find_one({'_id': ObjectId(orderId['product_id'])})
+    nft = db.nfts.find_one({'_id': ObjectId(orderId['product'])})
     userId = session.get('user_id')
     user = db.users.find_one({'_id': ObjectId(userId)})
+    receiverId = db.users.find_one({'_id': ObjectId(orderId['receiver'])})
     user_wallet = db.wallets.find_one({'user_id': ObjectId(user['_id'])})
     return render_template("nft_transfer_successfully.html",
                            orderId=orderId,
                            nft=nft,
                            user_wallet=user_wallet,
+                           receiverId=receiverId,
                            user=user)
+
+###################### Recuperación de Contraseña #############################
+
+
+@app.route("/password/recuperation")
+def password_recuperation_view():
+    mensaje1 = request.args.get('mensaje1')
+    return render_template("password_recuperation.html",
+                           mensaje1=mensaje1)
+
+#### Solicitamos Email ####
+
+
+@app.route("/send/password/code")
+def send_password_action():
+    email = request.args.get('email')
+
+    return redirect("/code/sended")
+
+
+@app.route("/code/sended")
+def sended_code_view():
+    mensaje1 = request.args.get('mensaje1')
+
+    return render_template("code_sended.html",
+                           mensaje1=mensaje1)
+#### Solicitamos el código ####
+
+
+@app.route("/verification/code")
+def verify_password_action():
+    verificationCode = request.args.get('code')
+
+    return redirect("/new/password")
+
+
+@app.route("/new/password")
+def new_password_view():
+    mensaje1 = request.args.get('mensaje1')
+    return render_template("new_password.html",
+                           )
+
+
+@app.route("/new/password/verification")
+def new_password_action():
+
+    return redirect("/new/password/successfully",
+                    )
+
+
+@app.route("/new/password/successfully")
+def new_password_success_view():
+
+    return render_template("new_password_successfully.html",
+                           )

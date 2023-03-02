@@ -55,12 +55,12 @@
                 <div class="col-12">
                     <nav class="navbar">
                         <div class="col-1 d-flex">
-                            <a href="/">
+                            <a href="/landing">
                                 <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/26/OpenSea_icon.svg/2048px-OpenSea_icon.svg.png"
                                     height="40px" width="40px">
                             </a>
                             <div class="col-1 pt-2 px-2">
-                                <a href="/" class="text-decoration-none">
+                                <a href="/landing" class="text-decoration-none">
                                     <h5 class="blanco">OpenSea</h5>
                                 </a>
                             </div>
@@ -82,7 +82,7 @@
                         <a class="navbar-brand pt-2" href="#">
                             <h6 class="blanco">Recursos</h6>
                         </a>
-                        <a href="/profile/{{order['user_id']}}" class="text-decoration-none">
+                        <a href="/profile/{{order['receiver']}}" class="text-decoration-none">
                             <i class="fa-regular fa-user fa-2x blanco"></i>
                         </a>
                         <i class="fa-solid fa-wallet fa-2x"></i>
@@ -101,16 +101,15 @@
                     <h1>¡Proceso Exitoso!</h1>
                     <h3 class="azul">Orden Creada</h3>
                 </div>
-                <div class="col-2"></div>
                 <div class="col-3 cuadrados" style="border-radius: 1rem;">
                     <h6 class="pt-3">Número de orden: {{order['_id']}}</h6>
                     <hr>
                     <h6>Fecha: {{order['created_at']}}</h6>
-                    <h6 class="azul">Total: {{order['total']}} ${{order['cart']['nft_currency']}}</h6>
                     <h6>Cliente: {{order['client']['first_name']}} {{order['client']['last_name']}}</h6>
                     <h6>Documento: {{order['client']['document']}}</h6>
+                    <h4 class="azul">Total: {{order['total']}} $MFC</h4>
                     <hr>
-                    <h6 class="azul pb-2">ID nuevo propietario: {{order['user_id']}} </h6>
+                    <h6 class="azul pb-2">ID nuevo propietario: {{user_name['user']}} </h6>
                 </div>
                 <br>
 
@@ -126,7 +125,7 @@
                         <h6 class="text-secondary">{{x['description']}}</h6>
                 </div>
                 {% endfor %}
-                <div class="col-3"></div>
+                <div class="col-2"></div>
                 <div class="col-12 text-center py-5">
                     <h3 class="azul">Pulsa Explorar para ver más perfiles de NFTS</h3>
                 </div>

@@ -70,12 +70,12 @@
                 <div class="col-12">
                     <nav class="navbar">
                         <div class="col-1 d-flex">
-                            <a href="/">
+                            <a href="/landing">
                                 <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/26/OpenSea_icon.svg/2048px-OpenSea_icon.svg.png"
                                     height="40px" width="40px">
                             </a>
                             <div class="col-1 pt-2 px-2">
-                                <a href="/" class="text-decoration-none">
+                                <a href="/landing" class="text-decoration-none">
                                     <h5 class="blanco">OpenSea</h5>
                                 </a>
                             </div>
@@ -129,8 +129,8 @@
                         <img src="{{nft['image_url']}}">
                     </div>
                     <hr>
-                    <h6>Nuevo propietario del item: {{orderId['receiver']['user']}}</h6>
-                    <h5 class="azul">+ {{orderId['price']}} $MFC Agregado a tu wallet.</h5>
+                    <h6>Nuevo propietario del item: ({{receiverId['user']}})</h6>
+                    <h5 class="azul">+ {{orderId['total']}} $MFC Agregado a tu wallet.</h5>
                     <h6 class="text-success">Nuevo balance: {{user_wallet['balance']}} $MFC</h6>
 
                 </div>
