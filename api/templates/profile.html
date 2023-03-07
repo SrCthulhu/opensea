@@ -340,42 +340,38 @@
                         <a href="/nft/details/{{n['_id']}}" class="text-decoration-none">
                             <img src="{{n['image_url']}}" class="card-img-top" style="border-radius: 0.5rem;">
                             <div class="card-body">
-                                <h6 class="card-title blanco">{{n['name']}} # {{n['quantity']}}</h6>
-                                <p class="card-text blanco">{{n['description']}}</p>
+                                <h6 class="card-title blanco pb-1">{{n['name']}}</h6>
+                                <p class="card-text azul">Descripción: {{n['description']}}</p>
                                 {% if n['listed'] %}
-                                <p class="blanco">{{n['listed']['fixed_amount']}} ${{blockchain['currency']}}</p>
+                                <p class="blanco">Precio: {{n['listed']['fixed_amount']}} ${{n['chain']['currency']}}
+                                </p>
+                                <p class="blanco">Cantidad: {{n['quantity']}}</p>
                                 {% else %}
-                                <p class="blanco">0 ${{blockchain['currency']}}</p>
+                                <p class="text-danger">Item aún sin listar</p>
+                                <p class="blanco">0 ${{n['chain']['currency']}}</p>
                                 {% endif %}
                             </div>
                         </a>
                         <!--Hay que usar ( example['x'] |string) para poder comparar el userId porque sino no entiende que son iguales los id-->
                         {% if (userId | string) != (user['_id'] | string) %}
-                        {% if n['listed'] and n['listed']['check_fixed'] == 'fixed' %}
+                        {% if n['listed'] and n['listed']['check_fixed'] != None %}
                         <div class="col d-flex">
                             <div class="col-6 px-2">
-                                <a href="/nft/add/cart/profile/{{n['_id']}}" class="btn btn-primary btn-sm">Agregar al
+                                <a href="/nft/add/cart/profile/{{n['_id']}}" class="btn btn-primary">Agregar al
                                     carrito</a>
                             </div>
                             <div class="col-6 px-2">
-                                <a href="/checkout/{{n['_id']}}" class="btn btn-primary btn-sm">Comprar ahora</a>
+                                <a href="/checkout/{{n['_id']}}" class="btn btn-primary">Comprar ahora</a>
                             </div>
                         </div>
                         {% if 'listed' in nfts and n['listed']['check_fixed'] == None %}
-                        {% if n['listed']['high_auction'] == 'high_price' %}
                         <div class="col text-center">
                             <a href="/user/offer/{{n['_id']}}" class="btn btn-primary">Hacer
                                 oferta</a>
                         </div>
-                        {% else %}
-                        <div class="col text-center">
-                            <h5 class="azul">Item aún sin listar</h5>
-                        </div>
                         {% endif %}
                         {% endif %}
                         {% endif %}
-                        {% endif %}
-
                     </div>
                 </div>
                 {% endfor %}

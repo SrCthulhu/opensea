@@ -222,10 +222,10 @@ def profile_view(id):
 
     blockchain = None
     if nfts:
+        # Hidratación de datos
         for block in nfts:
-            blockchain = db.blockchains.find_one(
+            block['chain'] = db.blockchains.find_one(
                 {'_id': ObjectId(block['currency'])})
-            print(blockchain['currency'])
 
     return render_template("profile.html",
                            user=user,
@@ -731,7 +731,7 @@ def checkout_view():
         subtotal = subtotal + \
             float(p['listed']['fixed_amount'] * p['quantity'])
     # operación para sumar iva ó comisión al total en este caso 10% del creador .
-    total = float(subtotal) + float(subtotal) * 10 / 100
+    total = float(subtotal) + (float(subtotal) * 10 / 100)
 
     for owner in cartproducts:
         nftOwner = db.users.find_one({'_id': ObjectId(owner['owner'])})
@@ -782,125 +782,117 @@ def create_order_action():
         return redirect('/checkout?mensaje2=La dirección de correo no es válida debe contener @gmail.com ó @hotmail.com')
 
     userId = session.get('user_id')
+
+    # buscar la wallet del cliente y verificar que tenga el balance necesario
+    client_wallet = db.wallets.find_one({'user_id': ObjectId(userId)})
+    if client_wallet['balance'] < total:
+        return redirect('/checkout?mensaje3=Balance insuficiente')
+
+    # buscar todos los productos del carrito
     cartproducts = list(db.cart.find({'user_id': userId}))
 
-    # newOrder es un diccionario que tiene el diccionario client dentro.
-    newOrder = {}
-    newOrder['client'] = {
-        'document': document,
-        'first_name': firstName,
-        'last_name': lastName,
-        'address': address,
-        'state': state,
-        'country': country,
-        'phone': phone,
-        'email': email,
-        'terms': terms,
-    }
-    newOrder['event'] = "Venta"
-    for owners in cartproducts:
-        # TODO: todo mal, porque siempre es el ultimo bicho
-        newOrder['seller'] = owners['owner']
-    newOrder['receiver'] = str(userId)
-    newOrder['cart'] = cartproducts
-    newOrder['total'] = total
-    newOrder['created_at'] = datetime.now()
-
-    # Buscamos billeteras de quien compra y del dueño del NFT y hacemos el trade
-    # La primera wallet del cliente la ubicamos con la sesion. para la segunda tuvimos que ciclar
-    # por cada elemento del carrito que tenga el mismo owner de la wallet y luego actualizamos el balance
-
-    client_wallet = db.wallets.find_one({'user_id': ObjectId(userId)})
-
+    # crear una orden por cada producto
     for product in cartproducts:
+
+        fixedProductAmount = float(product['listed']['fixed_amount'])
+
+        newOrder = {}
+        newOrder['client'] = {
+            'document': document,
+            'first_name': firstName,
+            'last_name': lastName,
+            'address': address,
+            'state': state,
+            'country': country,
+            'phone': phone,
+            'email': email,
+            'terms': terms,
+        }
+        newOrder['event'] = "Venta"
+        newOrder['seller'] = product['owner']
+        newOrder['product'] = str(product['product_id'])
+        newOrder['receiver'] = str(userId)
+        newOrder['product_amount'] = fixedProductAmount
+        newOrder['total'] = total
+        newOrder['created_at'] = datetime.now()
+
+        # guardar la orden en la DB
+        db.orders.insert_one(newOrder)
+
+        # buscar las wallets de dueño actual y el creador
         owner_wallet = db.wallets.find_one(
             {'user_id': ObjectId(product['owner'])})
         creator_wallet = db.wallets.find_one(
             {'user_id': ObjectId(product['creator']['_id'])})
 
-    print(owner_wallet)
-    print(creator_wallet)
-
-    if client_wallet['balance'] < total:
-        return redirect('/checkout?mensaje3=Balance insuficiente')
-
-    db.wallets.update_one(
-        {'user_id': client_wallet['user_id'],
-         'balance': client_wallet['balance']},
-        {
-            '$set': {'balance': client_wallet['balance'] - total}
-        }
-    )
-
-    db.wallets.update_one(
-        {'user_id': owner_wallet['user_id'],
-         'balance': owner_wallet['balance']},
-        {
-            '$set': {'balance': owner_wallet['balance'] + total}
-        }
-    )
-    # Aplicamos la comisión del 10% al creador de (LOS) NFT en el carro, acá es con el monto
-    #### fijo de lista (NO SUBASTADO) ####
-    for quantity in cartproducts:
-        base = 0
-        final_quantity = base + quantity['quantity']
-        print(final_quantity)
-    subtotal = 0
-    subtotal = subtotal + total * final_quantity
-    # El resultado será solo el porcentaje del total.
-    feeCreator = float(subtotal) * 10 / 100
-
-    db.wallets.update_one(
-        {'user_id': owner_wallet['user_id'],
-         'balance': owner_wallet['balance']},
-        {
-            '$set': {'balance': owner_wallet['balance'] - feeCreator}
-        }
-    )
-    db.wallets.update_one(
-        {'user_id': creator_wallet['user_id'],
-         'balance': creator_wallet['balance']},
-        {
-            '$set': {'balance': creator_wallet['balance'] + feeCreator}
-        }
-    )
-    #### Cambiamos el Propietario de los NFT en el carrito y la cantidad de suministro cambia ####
-    for product in cartproducts:
+        # transferencia del NFT
         db.nfts.update_one(
             {'_id': product['product_id'], 'owner': product['owner']},
             {
                 '$set': {'owner': newOrder['receiver']}
             }
         )
-        productId = db.nfts.find_one({'_id': product['product_id']})
-        if productId['quantity'] > 1:
-            db.nfts.update_one(
-                {'_id': productId['_id']},
-                {
-                    '$set': {'quantity': productId['quantity'] - 1}
-                }
-            )
-    # Creamos la orden
-    orderCreated = db.orders.insert_one(newOrder)
-    orderId = orderCreated.inserted_id
+        # transferencia de los balances por cada producto y calculo de los fees
+        db.wallets.update_one(
+            {'user_id': client_wallet['user_id'],
+             'balance': client_wallet['balance']},
+            {
+                '$set': {'balance': client_wallet['balance'] - fixedProductAmount}
+            }
+        )
 
+        fee_creator = float(fixedProductAmount) * 10 / 100
+        earning_owner = fixedProductAmount - fee_creator
+
+        db.wallets.update_one(
+            {'user_id': owner_wallet['user_id'],
+             'balance': owner_wallet['balance']},
+            {
+                '$set': {'balance': owner_wallet['balance'] + earning_owner}
+            }
+        )
+
+        db.wallets.update_one(
+            {'user_id': creator_wallet['user_id'],
+             'balance': creator_wallet['balance']},
+            {
+                '$set': {'balance': creator_wallet['balance'] + fee_creator}
+            }
+        )
+
+        # Actualizamos el campo de nft 'listed' de la base de datos para que no siga listado.
+        db.nfts.update_one(
+            {'_id': product['product_id']},
+            {
+                '$set': {'listed': False}
+            }
+        )
     # Borrar todos los productos del carrito DEL USUARIO
     db.cart.delete_many({'user_id': userId})
 
-    return redirect('/order/' + str(orderId))
+    return redirect('/orders')
 
 
-@app.route("/order/<id>")
-def order_view(id):
+@app.route("/orders")
+def order_view():
     if not session.get('user_id'):
         return redirect('/login')
+# Usamos concepto de hidratación.
+    userId = session.get('user_id')
+    print(userId)
+    orders = list(db.orders.find({'event': "Venta", 'receiver': str(userId)}))
+    for order in orders:
+        order['user_name'] = db.users.find_one(
+            {'_id': ObjectId(order['receiver'])})
 
-    order = db.orders.find_one({'_id': ObjectId(id)})
-    user_name = db.users.find_one({'_id': ObjectId(order['receiver'])})
+        order['nft'] = db.nfts.find_one({'_id': ObjectId(order['product'])})
+
+        order['currency'] = db.blockchains.find_one(
+            {'_id': ObjectId(order['nft']['currency'])})
 
     return render_template("order_completed.html",
-                           order=order,
-                           user_name=user_name
+                           orders=orders,
+                           order=order
                            )
 ################################ Fin Proceso de orden con carrito ##################################################
 
@@ -917,7 +909,7 @@ def checkout_view_product(id):
     subtotal = subtotal + \
         float(product['listed']['fixed_amount'] * product['quantity'])
     # Operación para sumar iva ó comisión al total en este caso 10% del creador .
-    total = float(subtotal) + float(subtotal) * 10 / 100
+    total = float(subtotal) + (float(subtotal) * 10 / 100)
 
     wallet = db.wallets.find_one({'user_id': ObjectId(userId)})
     nftOwner = db.users.find_one({'_id': ObjectId(product['owner'])})
@@ -1052,6 +1044,20 @@ def create_order_single(id):
                 '$set': {'quantity': product['quantity'] - 1}
             }
         )
+    # Guardamos el viejo monto para mostrarlo en la vista de completado.
+    db.nfts.update_one(
+        {'_id': product['_id']},
+        {
+            '$set': {'old_fixed_amount': product['listed']['fixed_amount']}
+        }
+    )
+    # Actualizamos el campo de nft 'listed' de la base de datos para que no siga listado.
+    db.nfts.update_one(
+        {'_id': product['_id']},
+        {
+            '$set': {'listed': False}
+        }
+    )
 
     # Creamos la orden (un solo producto)
     orderCreated = db.orders.insert_one(newOrder)

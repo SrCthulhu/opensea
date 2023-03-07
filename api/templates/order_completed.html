@@ -82,7 +82,7 @@
                         <a class="navbar-brand pt-2" href="#">
                             <h6 class="blanco">Recursos</h6>
                         </a>
-                        <a href="/profile/{{order['receiver']}}" class="text-decoration-none">
+                        <a href="/profile/{{order['user_name']['_id']}}" class="text-decoration-none">
                             <i class="fa-regular fa-user fa-2x blanco"></i>
                         </a>
                         <i class="fa-solid fa-wallet fa-2x"></i>
@@ -97,32 +97,36 @@
                 </div>
             </div>
             <div class="row">
-                <div class="col-12 text-center py-5">
-                    <h1>¡Proceso Exitoso!</h1>
-                    <h3 class="azul">Orden Creada</h3>
+                <div class="col-12 text-center py-3">
+                    <h1>¡Proceso exitoso!</h1>
+                    <h3 class="azul">Orden creada</h3>
                 </div>
+                <div class="col-12 pb-3">
+                    <h3>▶ Historial de órdenes del carrito</h3>
+                    <hr>
+                </div>
+
+                {% for o in orders %}
                 <div class="col-3 cuadrados" style="border-radius: 1rem;">
-                    <h6 class="pt-3">Número de orden: {{order['_id']}}</h6>
+                    <h6 class="pt-3">Número de orden: {{o['_id']}}</h6>
                     <hr>
-                    <h6>Fecha: {{order['created_at']}}</h6>
-                    <h6>Cliente: {{order['client']['first_name']}} {{order['client']['last_name']}}</h6>
-                    <h6>Documento: {{order['client']['document']}}</h6>
-                    <h4 class="azul">Total: {{order['total']}} $MFC</h4>
+                    <h6>Fecha: {{o['created_at']}}</h6>
+                    <h6>Cliente: {{o['client']['first_name']}} {{o['client']['last_name']}}</h6>
+                    <h6>Documento: {{o['client']['document']}}</h6>
+                    <h4 class="azul">Total: {{o['total']}} ${{o['currency']['currency']}}</h4>
                     <hr>
-                    <h6 class="azul pb-2">ID nuevo propietario: {{user_name['user']}} </h6>
+                    <h6 class="azul pb-2">ID nuevo propietario: {{o['user_name']['user']}} </h6>
                 </div>
                 <br>
-
-                {% for x in order['cart'] %}
                 <div class="col-2 text-center pt-5">
-                    <img src="{{x['image_url']}}" style="border-radius: 1rem;" width="200rem">
+                    <img src="{{o['nft']['image_url']}}" style="border-radius: 1rem;" width="200rem">
                 </div>
                 <div class="col-1 pt-5">
-                    <h3>X {{x['quantity']}}</h3>
-                    <h6 class="azul">{{x['name']}}</h6>
+                    <h3>X {{o['nft']['quantity']}}</h3>
+                    <h6 class="azul">{{o['nft']['name']}}</h6>
                     <hr>
-                    <h6>{{x['listed']['fixed_amount']}} ${{x['nft_currency']}}
-                        <h6 class="text-secondary">{{x['description']}}</h6>
+                    <h6>{{o['product_amount']}} ${{o['currency']['currency']}}
+                        <h6 class="text-secondary">{{o['nft']['description']}}</h6>
                 </div>
                 {% endfor %}
                 <div class="col-2"></div>
