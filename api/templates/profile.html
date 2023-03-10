@@ -226,7 +226,7 @@
                                 <div class="col-6">
                                     <h6>{{p['name']}}</h6>
                                     <h6 class="azul">{{p['creator']['user']}}</h6>
-                                    <h6 class="text-secondary">Ganancia del creador: 10%</h6>
+                                    <h6 class="text-secondary">{{p['description']}}</h6>
                                 </div>
                                 <div class="col-3 pt-1 text-end">
                                     <a href="/remove/cart/product/{{p['_id']}}" class="text-decoration-none">
@@ -242,7 +242,7 @@
                         <div class="modal-footer">
                             <div class="col-12 display-block d-flex">
                                 <div class="col-6">
-                                    <h5 class="pb-3">Precio sin comisión</h5>
+                                    <h4 class="pb-2 azul">Total:</h4>
                                     <h5>Método de pago</h5>
                                 </div>
                                 <div class="col-6 text-end">

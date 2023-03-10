@@ -107,7 +107,8 @@
                 </div>
 
                 {% for o in orders %}
-                <div class="col-3 cuadrados" style="border-radius: 1rem;">
+                <div class="col-3"></div>
+                <div class="col-3 cuadrados mb-4" style="border-radius: 1rem;">
                     <h6 class="pt-3">Número de orden: {{o['_id']}}</h6>
                     <hr>
                     <h6>Fecha: {{o['created_at']}}</h6>
@@ -115,23 +116,25 @@
                     <h6>Documento: {{o['client']['document']}}</h6>
                     <h4 class="azul">Total: {{o['total']}} ${{o['currency']['currency']}}</h4>
                     <hr>
-                    <h6 class="azul pb-2">ID nuevo propietario: {{o['user_name']['user']}} </h6>
+                    <h6 class="azul pb-2">Nuevo propietario: {{o['user_name']['user']}} </h6>
                 </div>
-                <br>
-                <div class="col-2 text-center pt-5">
+
+                <div class="col-2 text-center pt-4">
                     <img src="{{o['nft']['image_url']}}" style="border-radius: 1rem;" width="200rem">
                 </div>
-                <div class="col-1 pt-5">
+                <div class="col-1 pt-4">
                     <h3>X {{o['nft']['quantity']}}</h3>
                     <h6 class="azul">{{o['nft']['name']}}</h6>
                     <hr>
                     <h6>{{o['product_amount']}} ${{o['currency']['currency']}}
                         <h6 class="text-secondary">{{o['nft']['description']}}</h6>
                 </div>
+                <div class="col-3"></div>
                 {% endfor %}
-                <div class="col-2"></div>
                 <div class="col-12 text-center py-5">
-                    <h3 class="azul">Pulsa Explorar para ver más perfiles de NFTS</h3>
+                    <a href="/profile/{{order['user_name']['_id']}}" class="text-decoration-none">
+                        <h3 class="azul">⇦ Regresar al perfil</h3>
+                    </a>
                 </div>
             </div>
         </div>

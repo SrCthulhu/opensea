@@ -201,19 +201,122 @@
                 <hr>
                 <h4>▶ Ánime</h4>
                 {% for n in nfts %}
-                {% if 'listed' in nfts and n['listed']['category'] == 'Anime'%}
+                {% if 'listed' in n and n['listed']['category'] == 'Anime'%}
                 <div class="col-2 py-2">
                     <div class="card"
-                        style="width: 15rem; background-color: rgb(53 56 64); border-radius: 1rem; bottom:-0.5rem; left: 3rem; padding: 0.5rem;">
+                        style="width: 15rem; background-color: rgb(53 56 64); border-radius: 1rem; bottom:-0.5rem; left: 1rem; padding: 0.5rem;">
                         <a href="/nft/details/{{n['_id']}}" class="text-decoration-none">
                             <img src="{{n['image_url']}}" class="card-img-top" style="border-radius: 0.5rem;">
                             <div class="card-body">
-                                <h6 class="card-title blanco">{{n['name']}} # {{n['quantity']}}</h6>
-                                <p class="card-text blanco">{{n['description']}}</p>
+                                <h6 class="card-title blanco pb-1">{{n['name']}}</h6>
+                                <p class="card-text azul">Descripción: {{n['description']}}</p>
                                 {% if n['listed'] %}
-                                <p class="blanco">{{n['listed']['fixed_amount']}} ${{blockchain['currency']}}</p>
+                                <p class="blanco">Precio: {{n['listed']['fixed_amount']}} ${{n['chain']['currency']}}
+                                </p>
+                                <p class="blanco">Cantidad: {{n['quantity']}}</p>
                                 {% else %}
-                                <p class="blanco">0 ${{blockchain['currency']}}</p>
+                                <p class="text-danger">Item aún sin listar</p>
+                                <p class="blanco">0 ${{n['chain']['currency']}}</p>
+                                {% endif %}
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+                {% endfor %}
+                <h4 class="pt-4">▶ Película</h4>
+                {% for n in nfts %}
+                {% if 'listed' in n and n['listed']['category'] == 'Película'%}
+                <div class="col-2 py-2">
+                    <div class="card"
+                        style="width: 15rem; background-color: rgb(53 56 64); border-radius: 1rem; bottom:-0.5rem; left: 1rem; padding: 0.5rem;">
+                        <a href="/nft/details/{{n['_id']}}" class="text-decoration-none">
+                            <img src="{{n['image_url']}}" class="card-img-top" style="border-radius: 0.5rem;">
+                            <div class="card-body">
+                                <h6 class="card-title blanco pb-1">{{n['name']}}</h6>
+                                <p class="card-text azul">Descripción: {{n['description']}}</p>
+                                {% if n['listed'] %}
+                                <p class="blanco">Precio: {{n['listed']['fixed_amount']}} ${{n['chain']['currency']}}
+                                </p>
+                                <p class="blanco">Cantidad: {{n['quantity']}}</p>
+                                {% else %}
+                                <p class="text-danger">Item aún sin listar</p>
+                                <p class="blanco">0 ${{n['chain']['currency']}}</p>
+                                {% endif %}
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+                {% endfor %}
+                <h4 class="pt-4">▶ Serie de televisión</h4>
+                {% for n in nfts %}
+                {% if 'listed' in n and n['listed']['category'] == 'Serie' %}
+                <div class="col-2 py-2">
+                    <div class="card"
+                        style="width: 15rem; background-color: rgb(53 56 64); border-radius: 1rem; bottom:-0.5rem; left: 1rem; padding: 0.5rem;">
+                        <a href="/nft/details/{{n['_id']}}" class="text-decoration-none">
+                            <img src="{{n['image_url']}}" class="card-img-top" style="border-radius: 0.5rem;">
+                            <div class="card-body">
+                                <h6 class="card-title blanco pb-1">{{n['name']}}</h6>
+                                <p class="card-text azul">Descripción: {{n['description']}}</p>
+                                {% if n['listed'] %}
+                                <p class="blanco">Precio: {{n['listed']['fixed_amount']}} ${{n['chain']['currency']}}
+                                </p>
+                                <p class="blanco">Cantidad: {{n['quantity']}}</p>
+                                {% else %}
+                                <p class="text-danger">Item aún sin listar</p>
+                                <p class="blanco">0 ${{n['chain']['currency']}}</p>
+                                {% endif %}
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+                {% endfor %}
+                <h4 class="pt-4">▶ Abstracto</h4>
+                {% for n in nfts %}
+                {% if 'listed' in n and n['listed']['category'] == 'Abstracto'%}
+                <div class="col-2 py-2">
+                    <div class="card"
+                        style="width: 15rem; background-color: rgb(53 56 64); border-radius: 1rem; bottom:-0.5rem; left: 1rem; padding: 0.5rem;">
+                        <a href="/nft/details/{{n['_id']}}" class="text-decoration-none">
+                            <img src="{{n['image_url']}}" class="card-img-top" style="border-radius: 0.5rem;">
+                            <div class="card-body">
+                                <h6 class="card-title blanco pb-1">{{n['name']}}</h6>
+                                <p class="card-text azul">Descripción: {{n['description']}}</p>
+                                {% if n['listed'] %}
+                                <p class="blanco">Precio: {{n['listed']['fixed_amount']}} ${{n['chain']['currency']}}
+                                </p>
+                                <p class="blanco">Cantidad: {{n['quantity']}}</p>
+                                {% else %}
+                                <p class="text-danger">Item aún sin listar</p>
+                                <p class="blanco">0 ${{n['chain']['currency']}}</p>
+                                {% endif %}
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+                {% endfor %}
+                <h4 class="pt-4">▶ Misceláneo</h4>
+                {% for n in nfts %}
+                {% if 'listed' in n and n['listed']['category'] == 'Misceláneo'%}
+                <div class="col-2 py-2">
+                    <div class="card"
+                        style="width: 15rem; background-color: rgb(53 56 64); border-radius: 1rem; bottom:-0.5rem; left: 1rem; padding: 0.5rem;">
+                        <a href="/nft/details/{{n['_id']}}" class="text-decoration-none">
+                            <img src="{{n['image_url']}}" class="card-img-top" style="border-radius: 0.5rem;">
+                            <div class="card-body">
+                                <h6 class="card-title blanco pb-1">{{n['name']}}</h6>
+                                <p class="card-text azul">Descripción: {{n['description']}}</p>
+                                {% if n['listed'] %}
+                                <p class="blanco">Precio: {{n['listed']['fixed_amount']}} ${{n['chain']['currency']}}
+                                </p>
+                                <p class="blanco">Cantidad: {{n['quantity']}}</p>
+                                {% else %}
+                                <p class="text-danger">Item aún sin listar</p>
+                                <p class="blanco">0 ${{n['chain']['currency']}}</p>
                                 {% endif %}
                             </div>
                         </a>

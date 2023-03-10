@@ -130,7 +130,6 @@
                 </div>
             </div>
             <form class="container" action="/order/create/single/product/{{product['_id']}}">
-                <input name="total" value="{{total}}" type="hidden" />
                 <div class="row">
                     <div class="col-6 py-5">
                         <label for="exampleFormControlInput1" class="form-label">
@@ -194,14 +193,13 @@
                     <div class="col-6 py-5 cuadrados" style="border-radius: 0.5rem;">
 
                         <div class="row">
-                            <div class="col-2">
-                                <img src="{{product['image_url']}}" style="border-radius: 0.5rem;" width="90rem">
+                            <div class="col-5 pb-3">
+                                <img src="{{product['image_url']}}" style="border-radius: 0.5rem;" width="200rem">
                             </div>
-                            <div class="col-10">
+                            <div class="col-7">
                                 <h3 class="azul pb-2">{{product['name']}} X {{product['quantity']}}</h3>
-                                <p class="text-secondary">{{product['description']}}</p>
+                                <p class="text-secondary">Descripción: {{product['description']}}</p>
                                 <hr>
-                                <h6>{{product['listed']['fixed_amount']}} ${{product['nft_currency']}}</h6>
                                 <h6>Categoría: {{product['listed']['category']}}</h6>
                                 <h6 class="azul">Propietario actual: {{nftOwner['user']}}</h6>
                                 <h6 class="text-secondary">Creado por: {{product['creator']['user']}}</h6>
@@ -211,15 +209,12 @@
 
                         <div class="row cuadrados" style="border-radius: 1rem;">
                             <div class="col-6 py-3">
-                                <h6>Comisión del creador: </h6>
-                                <h6>Subtotal: </h6>
                                 <h6>Total: </h6>
                                 <h6 class="text-danger">Tu balance:</h6>
                             </div>
                             <div class="col-6 py-3">
-                                <h6>10%</h6>
-                                <h6>{{subtotal}} $MFC</h6>
-                                <h6 class="azul">{{total}} $MFC</h6>
+                                <h6 class="azul">{{product['listed']['fixed_amount']}}
+                                    ${{product['blockchain']['currency']}}</h6>
                                 <h6 class="text-danger">{{wallet['balance']}} ${{wallet['currency']}}</h6>
                             </div>
                         </div>
