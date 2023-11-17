@@ -1,4 +1,6 @@
 from transfer import Transfer
+from login import Login
+from signin import Signin
 from flask import Flask, render_template, redirect, session, request, abort
 from pymongo import MongoClient
 from bson.objectid import ObjectId
@@ -6,6 +8,8 @@ from datetime import datetime
 import random
 import os
 from twilio.rest import Client
+import uuid
+
 
 from dotenv import dotenv_values
 env = dotenv_values(".env")
@@ -71,60 +75,43 @@ def signin_user():
     newPassword = request.args.get('password')
     new_user_name = request.args.get('user')
 
-    if newEmail == "":
-        return redirect('/signin?mensaje=Ingresa el Email')
+    response = Signin(newEmail, newPassword, new_user_name)
 
-    if newPassword == "":
-        return redirect('/signin?mensaje=Ingresa una Contraseña')
-
-    if len(newPassword) < 8:
-        return redirect('/signin?mensaje=La contraseña debe contener 8 o más carácteres')
-
-    if new_user_name == "":
-        return redirect('/signin?mensaje=Ingresa un nombre de usuario')
-
-    if len(new_user_name) < 5:
-        return redirect('/signin?mensaje=El nombre de usuario no debe contener menos de 5 carácteres')
-
-    if len(new_user_name) > 23:
-        return redirect('/signin?mensaje=El nombre de usuario no debe contener  más de 23 carácteres')
-
-    emailSplitted = newEmail.split('@')
-
-    if len(emailSplitted) != 2 or emailSplitted[1] != 'gmail.com' != 'hotmail.com':
-
-        return redirect('/signin?mensaje=la dirección de correo no es válida, debe contener @gmail.com ó @hotmail.com')
-
-    time = datetime.now()
-
-# Asignamos un número al usuario y lo aumentamos al crearse otro nuevo.
-    users = list(db.users.find())
-
-    for i in range(len(users)):
-        total = i + 1 + 1
-        print(total)
-
-    newUser = {
-        'email': newEmail,
-        'password': newPassword,
-        'user': new_user_name,
-        'nfts': 0,
-        'user_number': total,
-        'user_created_at': time.strftime('%d-%m-%Y, %H:%M:%S')
-    }
-    userId = db.users.insert_one(newUser).inserted_id
-
-    newWallet = {
-        'name': "Mafiance Coin",
-        'currency': "MFC",
-        'balance': float(0),
-        'user_id': userId,
-    }
-    db.wallets.insert_one(newWallet)
+    if not response['success']:
+        return redirect('/signin?mensaje=' + response['error'])
 
     session.pop('user_id', None)
+    session['user_id'] = response['user_id']
 
-    return redirect('/finished/' + str(userId))
+    return redirect('/finished/' + response['user_id'])
+
+
+@app.route("/api/signin/new_user", methods=["POST"])
+def api_signin_users():
+
+    body = request.json
+    newEmail = ''
+    newPassword = ''
+    new_user_name = ''
+
+    if 'newEmail' in body:
+        newEmail = body['newEmail']
+
+    if 'newPassword' in body:
+        newPassword = body['newPassword']
+
+    if 'new_user_name' in body:
+        new_user_name = body['new_user_name']
+
+    response = Signin(newEmail, newPassword, new_user_name)
+
+    if not response['success']:
+        return response
+
+    return {
+        "success": True,
+        "user_id": response['user_id']
+    }
 
 
 @app.route("/finished/<id>")
@@ -141,29 +128,50 @@ def login_view():
 
 @app.route("/login/users")
 def login_users():
-
     userName = request.args.get('userName')
     userPassword = request.args.get('password')
 
-    userDocument = db.users.find_one(
-        {'$or': [{'email': userName}, {'user': userName}]})
+    response = Login(userName, userPassword)
+    if not response['success']:
+        return redirect('/login?mensaje=' + response['error'])
 
-    print(userDocument)
-    if userName == "":
-        return redirect('/login?mensaje=Ingresa el mail o nombre de usuario')
+    session['user_id'] = response['user_id']
 
-    if userPassword == "":
-        return redirect('/login?mensaje=Ingresa la contraseña')
+    return redirect('/profile/' + response['user_id'])
 
-    if not userDocument:
-        return redirect('/login?mensaje=El usuario no existe')
 
-    if userDocument['password'] != userPassword:
-        return redirect('/login?mensaje=La contraseña o el usuario es inválido')
+@app.route("/api/login/users", methods=["POST"])
+def api_login_users():
+    body = request.json
 
-    session['user_id'] = str(userDocument['_id'])
+    userName = ''
+    userPassword = ''
 
-    return redirect('/profile/' + str(userDocument['_id']))
+    if 'userName' in body:
+        userName = body['userName']
+
+    if 'password' in body:
+        userPassword = body['password']
+
+    # logica del login.py
+    response = Login(userName, userPassword)
+
+    if not response['success']:
+        return response
+
+    token = str(uuid.uuid4())
+    # valor unico y random para que nadie lo pueda adivinar
+
+    db.users.update_one(
+        {'_id': ObjectId(response['user_id'])},
+        {'$set': {'token': token}}
+    )
+
+    return {
+        "success": True,
+        "user_id": response['user_id'],
+        "jwt": token,
+    }
 
 
 @app.route("/profile/<id>")
