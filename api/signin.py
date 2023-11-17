@@ -69,3 +69,5 @@ def Signin(newEmail, newPassword, new_user_name):
         "user_id": userId,
     }
     db.wallets.insert_one(newWallet)
+
+    return {"success": True, "user_id": str(userId)}
