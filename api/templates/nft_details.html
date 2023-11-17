@@ -196,7 +196,7 @@
                             <small>Creado por <small class="azul">{{nft['creator']['_id']}}</small></small>
                             <div class="d-flex py-3">
                                 <i class="fa-regular fa-eye fa-1x"></i>
-                                <small class="px-1">? Vistas</small>
+                                <small class="px-1">232 Visitas</small>
                             </div>
                         </div>
                         <div class="col-4 text-end pt-5">
@@ -476,50 +476,44 @@
                     <h6 class="pt-3">Más de esta colección +</h6>
                     <hr>
                 </div>
-                <div class="col-1"></div>
-                <div class="col-10 blanco gris cuadrados" style="border-radius: 0.5rem;">
-
-                    {% for n in listNfts %}
-                    <div class="col-2 py-2">
-                        <div class="card"
-                            style="width: 15rem; background-color: rgb(53 56 64); border-radius: 1rem; bottom:-0.5rem; left: 3rem; padding: 0.5rem;">
-                            <a href="/nft/details/{{n['_id']}}" class="text-decoration-none">
-                                <img src="{{n['image_url']}}" class="card-img-top" style="border-radius: 0.5rem;">
-                                <div class="card-body">
-                                    <h6 class="card-title blanco">{{n['name']}} # {{n['quantity']}}
-                                    </h6>
-                                    <p class="card-text blanco">{{n['description']}}.</p>
-                                    {% if n['listed'] %}
-                                    <p class="blanco">{{n['listed']['fixed_amount']}} ${{blockchain['currency']}}</p>
-                                    {% else %}
-                                    <p class="blanco">0 ${{blockchain['currency']}}</p>
-                                    {% endif %}
-                                </div>
-                            </a>
-                            {% if (userId | string) != (nft['owner'] | string) %}
-                            {% if n['listed'] %}
-                            <div class="col d-flex">
-                                <div class="col-6 px-2">
-                                    <a href="/nft/add/cart/profile/{{n['_id']}}" class="btn btn-primary btn-sm">Agregar
-                                        al
-                                        carrito</a>
-                                </div>
-                                <div class="col-6 px-2">
-                                    <a href="/checkout/{{n['_id']}}" class="btn btn-primary btn-sm">Comprar ahora</a>
-                                </div>
+                {% for n in listNfts %}
+                <div class="col-2 py-2">
+                    <div class="card"
+                        style="width: 15rem; background-color: rgb(53 56 64); border-radius: 1rem; bottom:-0.5rem; left: 3rem; padding: 0.5rem;">
+                        <a href="/nft/details/{{n['_id']}}" class="text-decoration-none">
+                            <img src="{{n['image_url']}}" class="card-img-top" style="border-radius: 0.5rem;">
+                            <div class="card-body">
+                                <h6 class="card-title blanco">{{n['name']}} # {{n['quantity']}}</h6>
+                                <p class="card-text blanco">{{n['description']}}.</p>
+                                {% if n['listed'] %}
+                                <p class="blanco">{{n['listed']['fixed_amount']}} ${{blockchain['currency']}}</p>
+                                {% else %}
+                                <p class="blanco">0 ${{blockchain['currency']}}</p>
+                                {% endif %}
                             </div>
-                            {% else %}
-                            <div class="col text-center">
-                                <h5 class="azul">Item aún sin listar</h5>
+                        </a>
+                        {% if (userId | string) != (nft['owner'] | string) %}
+                        {% if n['listed'] %}
+                        <div class="col d-flex">
+                            <div class="col-6 px-2">
+                                <a href="/nft/add/cart/profile/{{n['_id']}}" class="btn btn-primary btn-sm">Agregar al
+                                    carrito</a>
                             </div>
-                            {% endif %}
-                            {% endif %}
+                            <div class="col-6 px-2">
+                                <a href="/checkout/{{n['_id']}}" class="btn btn-primary btn-sm">Comprar ahora</a>
+                            </div>
                         </div>
+                        {% else %}
+                        <div class="col text-center">
+                            <h5 class="azul">Item aún sin listar</h5>
+                        </div>
+                        {% endif %}
+                        {% endif %}
                     </div>
-                    {% endfor %}
                 </div>
-                <div class="col-1"></div>
+                {% endfor %}
             </div>
+
         </div>
     </section>
     <section class="dark-blue blanco pb-5">
